@@ -218,7 +218,11 @@ export default function useEpub() {
         allCss = stripUnneededRules(allCss);
 
         currentStyle += allCss;
+        // we don't need the style, link or title tags. furthermore, link tags would cause
+        // errors on the client because it wouldn't be able to find the files in the href.
         let processed = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+        processed = processed.replace(/<link[^>]*?>/gi, "");
+        processed = processed.replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "");
         processed = await cleanImages(processed, type);
         return processed;
     }

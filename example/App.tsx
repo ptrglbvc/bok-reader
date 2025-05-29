@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 import BokReader from "../src/components/BokReader/BokReader";
-import "./style.css";
+import "../src/style.css";
 
 function App() {
     const epubUrl =
-        "https://43ru4bvzl6.ufs.sh/f/7NUfZePLME3PGsuLJP1sHM5apItUSebxhDZTPWk6fyL3vAB1";
+        "https://43ru4bvzl6.ufs.sh/f/7NUfZePLME3PdJkelD5KMeOsb4QVJfmEhZqaTPv9XkdHLUgu";
 
     const handleReaderTitleChange = useCallback((title: string) => {
         if (title && title !== "Loading...") {

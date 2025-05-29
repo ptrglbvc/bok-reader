@@ -45,8 +45,8 @@ const ScopedGlobalStyle = createGlobalStyle`
         // Enable horizontal scrolling of the columns
         overflow-x: hidden;
         overflow-y: hidden; // Prevent vertical scrollbar on the container itself
-        scroll-snap-type: x mandatory; // Snap pages (columns)
-        scroll-behavior: auto; // Let JS handle smooth scrolling during page turns
+        // scroll-snap-type: x mandatory; // Snap pages (columns)
+        // scroll-behavior: auto; // Let JS handle smooth scrolling during page turns
         -webkit-overflow-scrolling: touch;
         box-sizing: border-box;
 

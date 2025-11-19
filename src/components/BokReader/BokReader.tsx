@@ -253,7 +253,7 @@ const BokReader: React.FC<BokReaderProps> = ({
             "--font-size": `${fontSize}em`,
             "--font-family": fontFamily,
         }),
-        [sidePadding, fontSize, fontFamily],
+        [sidePadding, fontSize, fontFamily, color],
     );
 
     if (error && !isLoading && !rawContent) {

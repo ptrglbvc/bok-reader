@@ -76,14 +76,14 @@ export default function Book({
                 return prev;
             });
         },
-        [pageWidth, pageCount, noOfPages]
+        [pageWidth, pageCount, noOfPages],
     );
 
     useNavigation(
         changePage,
         isOptionMenuVisible,
         containerElementRef,
-        showTutorial
+        showTutorial,
     );
 
     useEffect(() => {
@@ -125,7 +125,7 @@ export default function Book({
         const timer = setTimeout(() => {
             currentBookRef.style.setProperty(
                 "--side-padding",
-                `${sidePadding}px`
+                `${sidePadding}px`,
             );
             currentBookRef.style.setProperty("--font-size", `${fontSize}em`);
             currentBookRef.style.setProperty("--font-family", fontFamily);
@@ -145,7 +145,7 @@ export default function Book({
                 let targetPage = Math.round(noOfWholePages * percentRead);
                 targetPage = Math.max(
                     0,
-                    Math.min(noOfWholePages - 1, targetPage)
+                    Math.min(noOfWholePages - 1, targetPage),
                 );
                 if (currentPage !== targetPage) {
                     setCurrentPage(targetPage);

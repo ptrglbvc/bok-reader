@@ -5,7 +5,7 @@ const useNavigation = (
     changePage: (n: number) => void,
     isOptionMenuVisible: boolean,
     containerElementRef: React.RefObject<HTMLDivElement | null>,
-    showTutorial: boolean
+    showTutorial: boolean,
 ) => {
     const [pageWidth, pageHeight] = usePage(containerElementRef);
     const longPressTimerRef = useRef<null | number>(null);
@@ -28,7 +28,7 @@ const useNavigation = (
                 }
             }
         },
-        [changePage, isOptionMenuVisible, pageWidth, pageHeight]
+        [changePage, isOptionMenuVisible, pageWidth, pageHeight, showTutorial],
     );
 
     useEffect(() => {

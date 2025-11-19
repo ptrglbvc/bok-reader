@@ -1,0 +1,204 @@
+/* Keyframes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 var(--accent-color);
+    }
+    70% {
+        /* Browser interpolates color to transparent */
+        box-shadow: 0 0 0 20px transparent;
+    }
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+@keyframes bounce {
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-6px);
+    }
+    60% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Main Container */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+
+    /* Modern Glassmorphism */
+    background: radial-gradient(
+        circle at center,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.85) 100%
+    );
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto;
+    pointer-events: auto;
+
+    opacity: 1;
+    transition: opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.overlay.fadeOut {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Layout Zones */
+.interactionZone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    color: white;
+    cursor: pointer; /* Suggests these areas are tappable */
+}
+
+.centerZone {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 100px; /* Space for bottom nav/safe area */
+    pointer-events: none;
+}
+
+/* UI Elements */
+.iconWrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    backdrop-filter: blur(4px);
+
+    /* Pulse Animation using the variable */
+    animation: pulse 2s infinite;
+}
+
+.iconWrapper svg {
+    width: 32px;
+    height: 32px;
+    fill: var(--accent-color);
+    /* Soft glow around the icon */
+    filter: drop-shadow(0 0 5px var(--accent-color));
+}
+
+.label {
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    opacity: 0.9;
+    text-align: center;
+}
+
+/* Bottom specific styles */
+.bottomIconGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.bottomIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    backdrop-filter: blur(4px);
+}
+
+.bottomIconWrapper svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--accent-color);
+}
+
+.bounceArrow {
+    margin-top: 8px;
+    animation: bounce 2s infinite;
+}
+
+.bounceArrow svg {
+    opacity: 0.8;
+    fill: var(--accent-color);
+}
+
+.dismissButton {
+    margin-top: 20px;
+    background: var(--accent-color);
+    color: #000; /* Assuming dark text on bright accent */
+    font-weight: 700;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 30px;
+    font-size: 1rem;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+    animation: float 3s ease-in-out infinite;
+}
+
+.dismissButton:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5);
+}
+
+.dismissButton:active {
+    transform: scale(0.95);
+}

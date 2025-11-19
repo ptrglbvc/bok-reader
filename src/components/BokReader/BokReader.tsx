@@ -5,7 +5,7 @@ import useEpub from "../../hooks/useEpub"; // Import the modified hook
 import Book from "../Book";
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
-import TutorialOverlay from "./TutorialOverlay";
+import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
 
 // These styles apply *only* within BokReaderWrapper thanks to styled-components scoping
 const ScopedGlobalStyle = createGlobalStyle`
@@ -34,7 +34,7 @@ const ScopedGlobalStyle = createGlobalStyle`
         font-family: var(--font-family);
         padding: var(--top-padding) var(--side-padding) var(--bottom-padding);
         height: 100%;
-        text-shadow: 2px 2px 5px rgba(0, 0, 0); 
+        text-shadow: 2px 2px 5px rgba(0, 0, 0);
         font-size: var(--font-size);
 
         column-gap: calc(2 * var(--side-padding));
@@ -63,7 +63,7 @@ const ScopedGlobalStyle = createGlobalStyle`
               -webkit-column-break-inside: avoid;
          }
         p {
-            color: 
+            color:
         }
     }
 
@@ -171,7 +171,7 @@ const BokReaderWrapper = styled.div`
 // Simple persistent flag hook for tutorial overlay
 function usePersistentFlag(
     key: string,
-    defaultValue: boolean
+    defaultValue: boolean,
 ): [boolean, (v: boolean) => void] {
     const [value, setValue] = useState(() => {
         const stored = localStorage.getItem(key);
@@ -203,10 +203,9 @@ const BokReader: React.FC<BokReaderProps> = ({
 
     const bokReaderWrapperRef = useRef<HTMLDivElement>(null);
 
-    // Tutorial overlay state (localStorage)
     const [tutorialShown, setTutorialShown] = usePersistentFlag(
         "bokreader_tutorial_shown",
-        false
+        false,
     );
     const [showTutorial, setShowTutorial] = useState(!tutorialShown);
 
@@ -214,7 +213,6 @@ const BokReader: React.FC<BokReaderProps> = ({
         if (tutorialShown) setShowTutorial(false);
     }, [tutorialShown]);
 
-    // Dismiss tutorial and set localStorage
     const dismissTutorial = () => {
         setShowTutorial(false);
         setTutorialShown(true);
@@ -246,23 +244,18 @@ const BokReader: React.FC<BokReaderProps> = ({
         }
     }, [error, onError]);
 
-    // --- Style variables ---
-    // Use useMemo to prevent recalculating styles object on every render
     const dynamicCssVariables = useMemo(
         () => ({
             "--color-tint": color,
             "--side-padding": `${sidePadding}px`,
-            "--top-padding": "30px", // Example: make these configurable too if needed
-            "--bottom-padding": "70px", // Example
+            "--top-padding": "30px",
+            "--bottom-padding": "70px",
             "--font-size": `${fontSize}em`,
             "--font-family": fontFamily,
         }),
-        [sidePadding, fontSize, fontFamily]
+        [sidePadding, fontSize, fontFamily],
     );
 
-    // --- Render logic ---
-
-    // Display error message if loading failed
     if (error && !isLoading && !rawContent) {
         return (
             <BokReaderWrapper
@@ -277,11 +270,10 @@ const BokReader: React.FC<BokReaderProps> = ({
         );
     }
 
-    // Display loading indicator or the book content
     return (
         <BokReaderWrapper
             className={`bok-reader-container ${className || ""}`}
-            style={{ ...style, ...dynamicCssVariables } as React.CSSProperties} // Apply CSS vars
+            style={{ ...style, ...dynamicCssVariables } as React.CSSProperties}
             ref={bokReaderWrapperRef}
         >
             <ScopedGlobalStyle />
@@ -309,12 +301,11 @@ const BokReader: React.FC<BokReaderProps> = ({
                         setPadding={setSidePadding}
                         setFontSize={setFontSize}
                         setFontFamily={setFontFamily}
-                        isOptionMenuVisible={isOptionsMenuVisible} // For navigation hook inside Book
-                        containerElementRef={bokReaderWrapperRef} // Remove non-null assertion
+                        isOptionMenuVisible={isOptionsMenuVisible}
+                        containerElementRef={bokReaderWrapperRef}
                         showTutorial={showTutorial}
                     />
 
-                    {/* Render Options Menu when visible */}
                     {isOptionsMenuVisible && (
                         <OptionsMenu
                             onClose={() => setIsOptionsMenuVisible(false)}
@@ -328,7 +319,6 @@ const BokReader: React.FC<BokReaderProps> = ({
                         />
                     )}
 
-                    {/* Click area to open options */}
                     {!isOptionsMenuVisible && (
                         <div
                             className="bottom-click-area"
@@ -341,7 +331,6 @@ const BokReader: React.FC<BokReaderProps> = ({
                     )}
                 </>
             )}
-            {/* Placeholder or message if no EPUB is loaded and not currently loading/error */}
             {!epubDataSource && !isLoading && !error && (
                 <div style={{ padding: "20px", textAlign: "center" }}>
                     No EPUB loaded.
@@ -351,5 +340,5 @@ const BokReader: React.FC<BokReaderProps> = ({
     );
 };
 
-export default BokReader; // Default export
-export { BokReader }; // Named export
+export default BokReader;
+export { BokReader };

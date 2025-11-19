@@ -114,58 +114,57 @@ function OptionsMenu({
                 }`}
                 onClick={handleMenuClick}
             >
-                <button onClick={handleClose} className="close-button">
+                <button onClick={handleClose} className="close-button" aria-label="Close menu">
                     ✕
                 </button>
                 <h2>Reader Options</h2>
                 <div className="options-buttons">
+                    
+                    {/* Font Family */}
                     <div className="font-family-buttons">
+                        <div className="option-label">Font family</div>
                         <select
                             value={fontFamily}
                             onChange={(e) => {
-                                for (const font of allFonts) {
-                                    if (font.name === e.target.value) {
-                                        setFontFamily(e.target.value);
-                                    }
-                                }
+                                const selected = allFonts.find(f => f.name === e.target.value);
+                                if (selected) setFontFamily(selected.name);
                             }}
                         >
-                            {allFonts.map((font) => {
-                                return (
-                                    <option
-                                        key={font.displayName}
-                                        value={font.name}
-                                    >
-                                        {font.displayName}
-                                    </option>
-                                );
-                            })}
+                            {allFonts.map((font) => (
+                                <option key={font.displayName} value={font.name}>
+                                    {font.displayName}
+                                </option>
+                            ))}
                         </select>
-                        <div className="option-label">Font family</div>
                     </div>
+
+                    {/* Side Padding */}
                     <div className="padding-buttons">
-                        <button onClick={handlePaddingIncrement}>+</button>
-                        <button onClick={handlePaddingDecrement}>-</button>
-                        <div>
-                            <span className="option-label">Side padding: </span>
+                        <div className="option-label">Side padding</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={handlePaddingDecrement}>-</button>
                             <span
                                 ref={paddingValueRef}
                                 className="option-value"
                             >
                                 {padding}
                             </span>
+                            <button onClick={handlePaddingIncrement}>+</button>
                         </div>
                     </div>
+
+                    {/* Font Size */}
                     <div className="font-buttons">
-                        <button onClick={handleFontIncrement}>+</button>
-                        <button onClick={handleFontDecrement}>-</button>
-                        <div style={{ marginLeft: "auto" }}>
-                            <span className="option-label">Font size: </span>
+                        <div className="option-label">Font size</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={handleFontDecrement}>-</button>
                             <span ref={fontValueRef} className="option-value">
                                 {Math.round(fontSize * 10)}
                             </span>
+                            <button onClick={handleFontIncrement}>+</button>
                         </div>
                     </div>
+
                     <button onClick={toggleFullscreen}>
                         Toggle fullscreen
                     </button>

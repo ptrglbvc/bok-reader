@@ -34,7 +34,7 @@ const ScopedGlobalStyle = createGlobalStyle`
         font-family: var(--font-family);
         padding: var(--top-padding) var(--side-padding) var(--bottom-padding);
         height: 100%;
-        text-shadow: 2px 2px 5px rgba(0, 0, 0);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
         font-size: var(--font-size);
 
         column-gap: calc(2 * var(--side-padding));
@@ -126,13 +126,20 @@ const ScopedGlobalStyle = createGlobalStyle`
 
     .page-number {
         position: absolute;
-        bottom: 15px; // Position relative to the reader container
+        bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 13px;
-        color: gray;
-        z-index: 10; // Above book content
-        pointer-events: none; // Non-interactive
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        color: rgba(255, 255, 255, 0.4);
+        z-index: 10;
+        pointer-events: none;
+        font-variant-numeric: tabular-nums;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 4px 10px;
+        border-radius: 12px;
+        backdrop-filter: blur(2px);
     }
 
     .bottom-click-area {

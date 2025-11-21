@@ -1,13 +1,11 @@
-// src/BokReader.tsx
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import styled, { createGlobalStyle } from "styled-components";
-import useEpub from "../../hooks/useEpub"; // Import the modified hook
+import useEpub from "../../hooks/useEpub";
 import Book from "../Book";
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
 
-// These styles apply *only* within BokReaderWrapper thanks to styled-components scoping
 const ScopedGlobalStyle = createGlobalStyle`
   .bok-reader-container {
     font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -39,14 +37,10 @@ const ScopedGlobalStyle = createGlobalStyle`
 
         column-gap: calc(2 * var(--side-padding));
         -webkit-column-fill: auto;
-        // column-fill: auto; // MUST be auto for scrollWidth calculation to be correct
         -webkit-column-gap: calc(2 * var(--side-padding));
 
-        // Enable horizontal scrolling of the columns
         overflow-x: hidden;
-        overflow-y: hidden; // Prevent vertical scrollbar on the container itself
-        // scroll-snap-type: x mandatory; // Snap pages (columns)
-        // scroll-behavior: auto; // Let JS handle smooth scrolling during page turns
+        overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         box-sizing: border-box;
 
@@ -56,15 +50,11 @@ const ScopedGlobalStyle = createGlobalStyle`
             display: none;
          }
 
-        // Content *inside* the columns
-         > * { // Target direct children (likely the .bok-chapter divs)
-              break-inside: avoid-column; // Try to prevent elements breaking mid-column
-              page-break-inside: avoid; /* Older alias */
+         > * {
+              break-inside: avoid-column;
+              page-break-inside: avoid;
               -webkit-column-break-inside: avoid;
          }
-        p {
-            color:
-        }
     }
 
     @container (aspect-ratio > 1/1) {
@@ -84,36 +74,42 @@ const ScopedGlobalStyle = createGlobalStyle`
 
     @container (aspect-ratio <= 1/1) {
         .book-page {
-            columns: var(--safari-is-stupid-width, 100%) auto;
+            column-count: 1;
+            -moz-column-count: 1;
+            -webkit-column-count: 1;
+
+            column-width: var(--computed-width, 100%);
+            -webkit-column-width: var(--computed-width, 100%);
+
+            width: 100%;
+            box-sizing: border-box;
 
             img, svg {
                 max-width: calc(100% - 2 * var(--side-padding)) !important;
                 margin-bottom: 10px;
             }
         }
-    }    // --- Styles for Images/SVG within Columns ---
+    }
 
     .book-page img,
     .book-page svg {
         border-radius: 10px;
-        // Max height respects the vertical padding of the book-page container
         max-height: calc(100% - var(--top-padding) - var(--bottom-padding)) !important;
         display: block;
-        margin-left: auto; // Center if smaller than column width
+        margin-left: auto;
         margin-right: auto;
-        object-fit: contain; // Fit without distortion
-        box-sizing: border-box; // Ensure border/padding included in size
-         break-inside: avoid-column; // Crucial to prevent images splitting across columns
-         page-break-inside: avoid;
-         -webkit-column-break-inside: avoid;
+        object-fit: contain;
+        box-sizing: border-box;
+        break-inside: avoid-column;
+        page-break-inside: avoid;
+        -webkit-column-break-inside: avoid;
     }
 
     .book-page svg > image {
-        width: 100%; // Inherit size from parent SVG
+        width: 100%;
         height: 100%;
     }
 
-    // --- Chapter Styling ---
     .bok-chapter {
       margin-bottom: 100%;
        break-inside: avoid-column;
@@ -121,8 +117,7 @@ const ScopedGlobalStyle = createGlobalStyle`
        -webkit-column-break-inside: avoid;
     }
 
-    // --- Other Scoped Styles ---
-    parsererror { display: none; } // Hide EPUB parsing errors if they render
+    parsererror { display: none; }
 
     .page-number {
         position: absolute;
@@ -143,12 +138,12 @@ const ScopedGlobalStyle = createGlobalStyle`
     }
 
     .bottom-click-area {
-        position: absolute; // Within the reader container
+        position: absolute;
         bottom: 0;
         left: 0;
         width: 100%;
         height: 15%;
-        z-index: 1000; // Above page number, below options menu overlay
+        z-index: 1000;
         background-color: transparent;
         cursor: pointer;
     }
@@ -156,7 +151,7 @@ const ScopedGlobalStyle = createGlobalStyle`
 `;
 
 interface BokReaderProps {
-    epubDataSource: File | ArrayBuffer | string | null; // Allow string for URL
+    epubDataSource: File | ArrayBuffer | string | null;
     onTitleChange?: (title: string) => void;
     onLoadingChange?: (isLoading: boolean) => void;
     onError?: (errorMsg: string) => void;
@@ -166,16 +161,14 @@ interface BokReaderProps {
     color?: string;
 }
 
-// Wrapper div for scoping styles and establishing positioning context
 const BokReaderWrapper = styled.div`
     width: 100%;
     height: 100%;
-    position: relative;d
-    overflow: hidden;d
+    position: relative;
+    overflow: hidden;
     overflow-y: hidden;
 `;
 
-// Simple persistent flag hook for tutorial overlay
 function usePersistentFlag(
     key: string,
     defaultValue: boolean,
@@ -229,7 +222,7 @@ const BokReader: React.FC<BokReaderProps> = ({
         if (epubDataSource) {
             loadEpub(epubDataSource);
         }
-    }, [epubDataSource, loadEpub]); // Reload when source changes
+    }, [epubDataSource, loadEpub]);
 
     useEffect(() => {
         if (onTitleChange) {
@@ -237,14 +230,12 @@ const BokReader: React.FC<BokReaderProps> = ({
         }
     }, [title, onTitleChange]);
 
-    // Report loading state changes upstream
     useEffect(() => {
         if (onLoadingChange) {
             onLoadingChange(isLoading);
         }
     }, [isLoading, onLoadingChange]);
 
-    // Report errors upstream
     useEffect(() => {
         if (error && onError) {
             onError(error);
@@ -286,12 +277,8 @@ const BokReader: React.FC<BokReaderProps> = ({
             <ScopedGlobalStyle />
             <LoadingScreen isLoading={isLoading} color={color} />
 
-            {/* Tutorial Overlay (only on first load) */}
-
-            {/* Render Book only if content is ready and not loading */}
             {rawContent && (
                 <>
-                    {/* Only show tutorial overlay when not loading */}
                     {showTutorial && !isLoading && (
                         <TutorialOverlay
                             color={color}

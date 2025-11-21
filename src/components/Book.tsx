@@ -1,4 +1,3 @@
-// src/components/Book.tsx
 import React, {
     useState,
     useRef,
@@ -111,11 +110,6 @@ export default function Book({
         setCurrentPage(1);
     }, [title, setPercentRead, setFontSize, setPadding, setFontFamily]);
 
-    // function isCloseToHalf(num: number, tol = 1e-6) {
-    //     const frac = num - Math.floor(num);
-    //     return Math.abs(frac - 0.5) < tol;
-    // }
-
     useEffect(() => {
         const currentBookRef = bookRef.current;
         if (!currentBookRef || pageWidth <= 0 || pageHeight <= 0) return;
@@ -129,6 +123,13 @@ export default function Book({
             );
             currentBookRef.style.setProperty("--font-size", `${fontSize}em`);
             currentBookRef.style.setProperty("--font-family", fontFamily);
+
+            // Inject the exact calculated width to fix Safari layout issues
+            currentBookRef.style.setProperty(
+                "--computed-width",
+                `${pageWidth}px`,
+            );
+
             currentBookRef.style.maxHeight = `${pageHeight}px`;
 
             const totalWidth = currentBookRef.scrollWidth;
@@ -136,7 +137,7 @@ export default function Book({
                 pageWidth > 0 && totalWidth > 0
                     ? Math.round(totalWidth / pageWidth)
                     : 0;
-            // this is for 2 page view
+
             const noOfWholePages =
                 noOfPages === 1 ? newPageCount : Math.round(newPageCount / 2);
             setPageCount(noOfWholePages);
@@ -162,8 +163,6 @@ export default function Book({
         return () => {
             clearTimeout(timer);
         };
-        // no I wont include percentRead and currentPage, eslint. Idgaf.
-        // eslint-disable-next-line
     }, [
         pageWidth,
         pageHeight,

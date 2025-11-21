@@ -8,7 +8,7 @@ function App() {
 
     const handleReaderTitleChange = useCallback((title: string) => {
         if (title && title !== "Loading...") {
-            document.title = title; // Update the browser tab title
+            document.title = title;
         } else {
             document.title = "Bok";
         }
@@ -17,7 +17,6 @@ function App() {
     const handleReaderError = useCallback((errorMsg: string) => {
         console.error("BokReader reported an error:", errorMsg);
         alert(`Error loading book: ${errorMsg}\nPlease try a different file.`);
-        console.error("Failed to load from URL, cannot automatically reset.");
     }, []);
 
     const handleReaderLoading = useCallback((_isLoading: boolean) => {}, []);
@@ -35,8 +34,6 @@ function App() {
                     width: "100svw",
                     height: "100svh",
                     overflow: "hidden",
-                    // @ts-expect-error sorry ts, we need this stupid thing for stupid safari
-                    "--safari-is-stupid-width": "100vw",
                 }}
             >
                 <BokReader

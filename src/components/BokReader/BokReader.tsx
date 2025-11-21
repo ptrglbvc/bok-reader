@@ -1,158 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import styled, { createGlobalStyle } from "styled-components";
+import styled from "styled-components";
 import useEpub from "../../hooks/useEpub";
 import Book from "../Book";
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
-
-const ScopedGlobalStyle = createGlobalStyle`
-  .bok-reader-container {
-    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
-    text-align: justify;
-    color-scheme: dark light;
-    color: rgb(215, 215, 215) !important;
-    background-color: black;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-     &::-webkit-scrollbar { display: none; }
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    container-type: size;
-
-    .book-page {
-        margin: 0;
-        font-family: var(--font-family);
-        padding: var(--top-padding) var(--side-padding) var(--bottom-padding);
-        height: 100%;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        font-size: var(--font-size);
-
-        column-gap: calc(2 * var(--side-padding));
-        -webkit-column-fill: auto;
-        -webkit-column-gap: calc(2 * var(--side-padding));
-
-        /* SAFARI FIX: Auto allows native scroll physics (smooth),
-           overscroll-behavior prevents the 'bounce' that causes page misalignments */
-        overflow-x: auto;
-        overscroll-behavior-x: none;
-
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-        box-sizing: border-box;
-
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-         &::-webkit-scrollbar {
-            display: none;
-         }
-
-         > * {
-              break-inside: avoid-column;
-              page-break-inside: avoid;
-              -webkit-column-break-inside: avoid;
-         }
-    }
-
-    @container (aspect-ratio > 1/1) {
-        .book-page {
-            column-count: 2;
-            -moz-column-count: 2;
-            -webkit-column-count: 2;
-            column-width: calc(50% - var(--side-padding));
-            -webkit-column-width: calc(50% - var(--side-padding));
-
-            img, svg {
-                max-width: calc(100% - 2 * var(--side-padding)) !important;
-                margin-bottom: 10px;
-            }
-        }
-    }
-
-    @container (aspect-ratio <= 1/1) {
-        .book-page {
-            column-count: 1;
-            -moz-column-count: 1;
-            -webkit-column-count: 1;
-
-            column-width: var(--computed-width, 100%);
-            -webkit-column-width: var(--computed-width, 100%);
-
-            width: 100%;
-            box-sizing: border-box;
-
-            img, svg {
-                max-width: calc(100% - 2 * var(--side-padding)) !important;
-                margin-bottom: 10px;
-            }
-        }
-    }
-
-    .book-page img,
-    .book-page svg {
-        border-radius: 10px;
-        max-height: calc(100% - var(--top-padding) - var(--bottom-padding)) !important;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        object-fit: contain;
-        box-sizing: border-box;
-        break-inside: avoid-column;
-        page-break-inside: avoid;
-        -webkit-column-break-inside: avoid;
-    }
-
-    .book-page svg > image {
-        width: 100%;
-        height: 100%;
-    }
-
-    .bok-chapter {
-      margin-bottom: 100%;
-       break-inside: avoid-column;
-       page-break-inside: avoid;
-       -webkit-column-break-inside: avoid;
-    }
-
-    parsererror { display: none; }
-
-    .page-number {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 12px;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        color: rgba(255, 255, 255, 0.4);
-        z-index: 10;
-        pointer-events: none;
-        font-variant-numeric: tabular-nums;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 4px 10px;
-        border-radius: 12px;
-        backdrop-filter: blur(2px);
-    }
-
-    .bottom-click-area {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 15%;
-        z-index: 1000;
-        background-color: transparent;
-        cursor: pointer;
-    }
-  }
-`;
 
 interface BokReaderProps {
     epubDataSource: File | ArrayBuffer | string | null;
@@ -178,8 +30,8 @@ function usePersistentFlag(
     defaultValue: boolean,
 ): [boolean, (v: boolean) => void] {
     const [value, setValue] = useState(() => {
+        // SSR Check
         if (typeof window === "undefined") return defaultValue;
-
         const stored = localStorage.getItem(key);
         return stored === null ? defaultValue : stored === "true";
     });
@@ -266,7 +118,7 @@ const BokReader: React.FC<BokReaderProps> = ({
                 className={`bok-reader-container ${className || ""}`}
                 style={style}
             >
-                <ScopedGlobalStyle />
+                {/* Removed ScopedGlobalStyle */}
                 <div style={{ padding: "20px", color: "red" }}>
                     Error loading EPUB: {error}
                 </div>
@@ -280,7 +132,7 @@ const BokReader: React.FC<BokReaderProps> = ({
             style={{ ...style, ...dynamicCssVariables } as React.CSSProperties}
             ref={bokReaderWrapperRef}
         >
-            <ScopedGlobalStyle />
+            {/* Removed ScopedGlobalStyle */}
             <LoadingScreen isLoading={isLoading} color={color} />
 
             {rawContent && (

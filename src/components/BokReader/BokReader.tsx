@@ -39,7 +39,11 @@ const ScopedGlobalStyle = createGlobalStyle`
         -webkit-column-fill: auto;
         -webkit-column-gap: calc(2 * var(--side-padding));
 
-        overflow-x: hidden;
+        /* SAFARI FIX: Auto allows native scroll physics (smooth),
+           overscroll-behavior prevents the 'bounce' that causes page misalignments */
+        overflow-x: auto;
+        overscroll-behavior-x: none;
+
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         box-sizing: border-box;
@@ -174,6 +178,8 @@ function usePersistentFlag(
     defaultValue: boolean,
 ): [boolean, (v: boolean) => void] {
     const [value, setValue] = useState(() => {
+        if (typeof window === "undefined") return defaultValue;
+
         const stored = localStorage.getItem(key);
         return stored === null ? defaultValue : stored === "true";
     });

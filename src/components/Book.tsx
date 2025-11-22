@@ -85,6 +85,7 @@ export default function Book({
         showTutorial,
     );
 
+    // Initial Load / Local Storage Restoration
     useEffect(() => {
         if (!title) return;
         const local = localStorage.getItem(title);
@@ -92,7 +93,10 @@ export default function Book({
             try {
                 const parsedLocal = JSON.parse(local);
                 if (parsedLocal) {
-                    setPercentRead(parsedLocal.percentRead || 0);
+                    // Ensure we set percentRead before the layout effect runs
+                    if (parsedLocal.percentRead !== undefined) {
+                        setPercentRead(parsedLocal.percentRead);
+                    }
                     if (parsedLocal.fontSize !== undefined)
                         setFontSize(parsedLocal.fontSize);
                     if (parsedLocal.padding !== undefined)
@@ -107,9 +111,11 @@ export default function Book({
         } else {
             setPercentRead(0);
         }
-        setCurrentPage(1);
-    }, [title, setPercentRead, setFontSize, setPadding, setFontFamily]);
+        // We don't blindly set currentPage to 1 here anymore;
+        // we let the layout effect handle the initial page determination
+    }, [title, setFontSize, setPadding, setFontFamily, setPercentRead]);
 
+    // Layout & Scroll Restoration Effect
     useEffect(() => {
         const currentBookRef = bookRef.current;
         if (!currentBookRef || pageWidth <= 0 || pageHeight <= 0) return;
@@ -117,47 +123,60 @@ export default function Book({
         setIsLoading(true);
 
         const timer = setTimeout(() => {
+            // 1. Apply CSS Variables that affect layout
             currentBookRef.style.setProperty(
                 "--side-padding",
                 `${sidePadding}px`,
             );
             currentBookRef.style.setProperty("--font-size", `${fontSize}em`);
             currentBookRef.style.setProperty("--font-family", fontFamily);
-
-            // Inject the exact calculated width to fix Safari layout issues
             currentBookRef.style.setProperty(
                 "--computed-width",
                 `${pageWidth}px`,
             );
-
             currentBookRef.style.maxHeight = `${pageHeight}px`;
 
-            const totalWidth = currentBookRef.scrollWidth;
-            const newPageCount =
-                pageWidth > 0 && totalWidth > 0
-                    ? Math.round(totalWidth / pageWidth)
-                    : 0;
+            // 2. FORCE REFLOW (Crucial for Safari)
+            // Reading offsetHeight forces the browser to apply the styles above immediately
+            // so that subsequent scroll calculations are based on the *new* layout.
+            void currentBookRef.offsetHeight;
 
-            const noOfWholePages =
-                noOfPages === 1 ? newPageCount : Math.round(newPageCount / 2);
-            setPageCount(noOfWholePages);
+            // 3. Defer Scroll to next Animation Frame
+            // Even with force reflow, Safari sometimes ignores scrollLeft changes
+            // if done in the same tick as layout changes for multi-column elements.
+            requestAnimationFrame(() => {
+                if (!currentBookRef) return;
 
-            if (noOfWholePages > 0 && currentBookRef.clientWidth > 0) {
-                let targetPage = Math.round(noOfWholePages * percentRead);
-                targetPage = Math.max(
-                    0,
-                    Math.min(noOfWholePages - 1, targetPage),
-                );
-                if (currentPage !== targetPage) {
+                const totalWidth = currentBookRef.scrollWidth;
+                const newPageCount =
+                    pageWidth > 0 && totalWidth > 0
+                        ? Math.round(totalWidth / pageWidth)
+                        : 0;
+
+                const noOfWholePages =
+                    noOfPages === 1
+                        ? newPageCount
+                        : Math.round(newPageCount / 2);
+                setPageCount(noOfWholePages);
+
+                if (noOfWholePages > 0 && currentBookRef.clientWidth > 0) {
+                    // Recalculate target based on the *restored* percentRead
+                    let targetPage = Math.round(noOfWholePages * percentRead);
+                    targetPage = Math.max(
+                        0,
+                        Math.min(noOfWholePages - 1, targetPage),
+                    );
+
+                    // Always update scroll position to match the percentage,
+                    // even if the page number hasn't technically changed in state.
                     setCurrentPage(targetPage);
                     currentBookRef.scrollLeft =
                         targetPage * pageWidth * noOfPages;
+                } else {
+                    setCurrentPage(1);
                 }
-            } else {
                 setIsLoading(false);
-                setCurrentPage(1);
-            }
-            setIsLoading(false);
+            });
         }, 400);
 
         return () => {
@@ -173,6 +192,9 @@ export default function Book({
         content,
         title,
         setIsLoading,
+        // We add percentRead here to ensure it re-runs if storage restores
+        // a percentage after initial mount
+        percentRead,
     ]);
 
     useEffect(() => {
@@ -190,7 +212,7 @@ export default function Book({
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [changePage, pageWidth, percentRead]);
+    }, [changePage]);
 
     return (
         <>

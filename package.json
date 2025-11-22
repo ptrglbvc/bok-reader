@@ -1,7 +1,7 @@
 {
     "name": "bok-reader",
     "private": false,
-    "version": "0.1.8",
+    "version": "0.1.9",
     "type": "module",
     "main": "dist/bok.umd.js",
     "module": "dist/bok.es.js",
@@ -26,9 +26,6 @@
         "react-dom": "^18.3.1"
     },
     "devDependencies": {
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1",
-        "styled-components": "^6.1.8",
         "@types/node": "^22.14.0",
         "@types/react": "^18.0.0",
         "@types/react-dom": "^18.0.0",
@@ -40,9 +37,13 @@
         "eslint": "^8.56.0",
         "eslint-plugin-react-hooks": "^4.6.0",
         "eslint-plugin-react-refresh": "^0.4.5",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
         "rimraf": "^6.0.1",
+        "styled-components": "^6.1.8",
         "typescript": "^5.2.2",
         "vite": "^5.1.4",
-        "vite-plugin-dts": "^4.5.3"
+        "vite-plugin-dts": "^4.5.3",
+        "vite-plugin-lib-inject-css": "^2.2.2"
     }
 }

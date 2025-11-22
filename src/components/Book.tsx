@@ -27,6 +27,14 @@ interface PageProps {
     containerElementRef: React.RefObject<HTMLDivElement | null>;
 }
 
+// Bouncy easing function
+// x represents progress (0 to 1)
+const easeOutBack = (x: number): number => {
+    const c1 = 1.2; // Bounce amount. Higher = bouncier.
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+};
+
 export default function Book({
     content,
     title,
@@ -48,6 +56,13 @@ export default function Book({
     const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(0);
 
+    const percentReadRef = useRef(percentRead);
+    const animationRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        percentReadRef.current = percentRead;
+    }, [percentRead]);
+
     useLocalStorage(title, percentRead, sidePadding, fontSize, fontFamily);
 
     const changePage = useCallback(
@@ -66,10 +81,39 @@ export default function Book({
                         newValue = pageCount - 1;
                     }
 
-                    scrollContainer.scroll({
-                        left: newValue * pageWidth * noOfPages,
-                        behavior: "smooth",
-                    });
+                    // --- CUSTOM ANIMATION LOGIC ---
+                    if (animationRef.current) {
+                        cancelAnimationFrame(animationRef.current);
+                    }
+
+                    const start = scrollContainer.scrollLeft;
+                    const target = newValue * pageWidth * noOfPages;
+                    const distance = target - start;
+
+                    // Slightly longer duration to let the bounce breathe
+                    const duration = 450; // ms
+                    const startTime = performance.now();
+
+                    const animateScroll = (currentTime: number) => {
+                        const elapsed = currentTime - startTime;
+
+                        if (elapsed < duration) {
+                            // Use the bouncy easing here
+                            const ease = easeOutBack(elapsed / duration);
+                            scrollContainer.scrollLeft =
+                                start + distance * ease;
+                            animationRef.current =
+                                requestAnimationFrame(animateScroll);
+                        } else {
+                            // Snap to final position
+                            scrollContainer.scrollLeft = target;
+                            animationRef.current = null;
+                        }
+                    };
+
+                    animationRef.current = requestAnimationFrame(animateScroll);
+                    // ------------------------------
+
                     return newValue;
                 }
                 return prev;
@@ -93,7 +137,6 @@ export default function Book({
             try {
                 const parsedLocal = JSON.parse(local);
                 if (parsedLocal) {
-                    // Ensure we set percentRead before the layout effect runs
                     if (parsedLocal.percentRead !== undefined) {
                         setPercentRead(parsedLocal.percentRead);
                     }
@@ -111,8 +154,6 @@ export default function Book({
         } else {
             setPercentRead(0);
         }
-        // We don't blindly set currentPage to 1 here anymore;
-        // we let the layout effect handle the initial page determination
     }, [title, setFontSize, setPadding, setFontFamily, setPercentRead]);
 
     // Layout & Scroll Restoration Effect
@@ -123,7 +164,6 @@ export default function Book({
         setIsLoading(true);
 
         const timer = setTimeout(() => {
-            // 1. Apply CSS Variables that affect layout
             currentBookRef.style.setProperty(
                 "--side-padding",
                 `${sidePadding}px`,
@@ -136,14 +176,9 @@ export default function Book({
             );
             currentBookRef.style.maxHeight = `${pageHeight}px`;
 
-            // 2. FORCE REFLOW (Crucial for Safari)
-            // Reading offsetHeight forces the browser to apply the styles above immediately
-            // so that subsequent scroll calculations are based on the *new* layout.
+            // FORCE REFLOW
             void currentBookRef.offsetHeight;
 
-            // 3. Defer Scroll to next Animation Frame
-            // Even with force reflow, Safari sometimes ignores scrollLeft changes
-            // if done in the same tick as layout changes for multi-column elements.
             requestAnimationFrame(() => {
                 if (!currentBookRef) return;
 
@@ -160,15 +195,16 @@ export default function Book({
                 setPageCount(noOfWholePages);
 
                 if (noOfWholePages > 0 && currentBookRef.clientWidth > 0) {
-                    // Recalculate target based on the *restored* percentRead
-                    let targetPage = Math.round(noOfWholePages * percentRead);
+                    const currentPercent = percentReadRef.current;
+
+                    let targetPage = Math.round(
+                        noOfWholePages * currentPercent,
+                    );
                     targetPage = Math.max(
                         0,
                         Math.min(noOfWholePages - 1, targetPage),
                     );
 
-                    // Always update scroll position to match the percentage,
-                    // even if the page number hasn't technically changed in state.
                     setCurrentPage(targetPage);
                     currentBookRef.scrollLeft =
                         targetPage * pageWidth * noOfPages;
@@ -181,6 +217,9 @@ export default function Book({
 
         return () => {
             clearTimeout(timer);
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+            }
         };
     }, [
         pageWidth,
@@ -192,9 +231,6 @@ export default function Book({
         content,
         title,
         setIsLoading,
-        // We add percentRead here to ensure it re-runs if storage restores
-        // a percentage after initial mount
-        percentRead,
     ]);
 
     useEffect(() => {

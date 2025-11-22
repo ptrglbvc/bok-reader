@@ -39,8 +39,6 @@ const ScopedGlobalStyle = createGlobalStyle`
         -webkit-column-fill: auto;
         -webkit-column-gap: calc(2 * var(--side-padding));
 
-        /* SAFARI FIX: Auto allows native scroll physics (smooth),
-           overscroll-behavior prevents the 'bounce' that causes page misalignments */
         overflow-x: auto;
         overscroll-behavior-x: none;
 

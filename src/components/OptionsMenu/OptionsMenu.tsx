@@ -114,24 +114,32 @@ function OptionsMenu({
                 }`}
                 onClick={handleMenuClick}
             >
-                <button onClick={handleClose} className="close-button" aria-label="Close menu">
+                <button
+                    onClick={handleClose}
+                    className="close-button"
+                    aria-label="Close menu"
+                >
                     ✕
                 </button>
                 <h2>Reader Options</h2>
                 <div className="options-buttons">
-                    
                     {/* Font Family */}
                     <div className="font-family-buttons">
                         <div className="option-label">Font family</div>
                         <select
                             value={fontFamily}
                             onChange={(e) => {
-                                const selected = allFonts.find(f => f.name === e.target.value);
+                                const selected = allFonts.find(
+                                    (f) => f.name === e.target.value,
+                                );
                                 if (selected) setFontFamily(selected.name);
                             }}
                         >
                             {allFonts.map((font) => (
-                                <option key={font.displayName} value={font.name}>
+                                <option
+                                    key={font.displayName}
+                                    value={font.name}
+                                >
                                     {font.displayName}
                                 </option>
                             ))}
@@ -141,7 +149,13 @@ function OptionsMenu({
                     {/* Side Padding */}
                     <div className="padding-buttons">
                         <div className="option-label">Side padding</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                            }}
+                        >
                             <button onClick={handlePaddingDecrement}>-</button>
                             <span
                                 ref={paddingValueRef}
@@ -156,7 +170,13 @@ function OptionsMenu({
                     {/* Font Size */}
                     <div className="font-buttons">
                         <div className="option-label">Font size</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                            }}
+                        >
                             <button onClick={handleFontDecrement}>-</button>
                             <span ref={fontValueRef} className="option-value">
                                 {Math.round(fontSize * 10)}

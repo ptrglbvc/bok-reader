@@ -30,14 +30,12 @@ export default defineConfig({
             external: [
                 "react",
                 "react-dom",
-                "styled-components",
                 "react/jsx-runtime",
             ],
             output: {
                 globals: {
                     react: "React",
                     "react-dom": "ReactDOM",
-                    "styled-components": "styled",
                     "react/jsx-runtime": "jsxRuntime",
                 },
             },

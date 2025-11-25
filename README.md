@@ -59,8 +59,6 @@ export default MyBookViewer;
 ## Dependencies
 
 -   jszip
--   react-spinners
--   styled-components
 
 ## Peer Dependencies
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import styled from "styled-components";
 import useEpub from "../../hooks/useEpub";
 import Book from "../Book";
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
+import "./BokReader.css"
 
 interface BokReaderProps {
     epubDataSource: File | ArrayBuffer | string | null;
@@ -17,13 +17,6 @@ interface BokReaderProps {
     color?: string;
 }
 
-const BokReaderWrapper = styled.div`
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    overflow-y: hidden;
-`;
 
 function usePersistentFlag(
     key: string,
@@ -114,25 +107,23 @@ const BokReader: React.FC<BokReaderProps> = ({
 
     if (error && !isLoading && !rawContent) {
         return (
-            <BokReaderWrapper
+            <div
                 className={`bok-reader-container ${className || ""}`}
                 style={style}
             >
-                {/* Removed ScopedGlobalStyle */}
                 <div style={{ padding: "20px", color: "red" }}>
                     Error loading EPUB: {error}
                 </div>
-            </BokReaderWrapper>
+            </div>
         );
     }
 
     return (
-        <BokReaderWrapper
+        <div
             className={`bok-reader-container ${className || ""}`}
             style={{ ...style, ...dynamicCssVariables } as React.CSSProperties}
             ref={bokReaderWrapperRef}
         >
-            {/* Removed ScopedGlobalStyle */}
             <LoadingScreen isLoading={isLoading} color={color} />
 
             {rawContent && (
@@ -188,7 +179,7 @@ const BokReader: React.FC<BokReaderProps> = ({
                     No EPUB loaded.
                 </div>
             )}
-        </BokReaderWrapper>
+        </div>
     );
 };
 

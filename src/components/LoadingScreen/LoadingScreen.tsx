@@ -1,5 +1,10 @@
-import { PropagateLoader } from "react-spinners";
+import { CSSProperties } from "react";
 import styles from "./LoadingScreen.module.css";
+
+// Allow CSS variables in style prop
+interface CustomCSS extends CSSProperties {
+    "--loader-color"?: string;
+}
 
 type LoadingScreenProps = {
     isLoading: boolean;
@@ -10,6 +15,10 @@ export default function LoadingScreen({
     isLoading,
     color,
 }: LoadingScreenProps) {
+    const spinnerStyle: CustomCSS = {
+        "--loader-color": color || "red",
+    };
+
     return (
         <div
             className={
@@ -18,10 +27,9 @@ export default function LoadingScreen({
                     : styles["loading-screen-gon"]
             }
         >
-            <div>
-                <PropagateLoader
-                    color={color ? color : "red"}
-                ></PropagateLoader>
+            <div className={styles.spinner} style={spinnerStyle}>
+                {/* The glowing center dot */}
+                <div className={styles.core}></div>
             </div>
         </div>
     );

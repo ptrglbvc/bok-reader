@@ -27,6 +27,14 @@ interface PageProps {
     containerElementRef: React.RefObject<HTMLDivElement | null>;
 }
 
+// Bouncy easing function
+// x represents progress (0 to 1)
+const easeOutBack = (x: number): number => {
+    const c1 = 1.2; // Bounce amount. Higher = bouncier.
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+};
+
 export default function Book({
     content,
     title,
@@ -48,6 +56,13 @@ export default function Book({
     const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(0);
 
+    const percentReadRef = useRef(percentRead);
+    const animationRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        percentReadRef.current = percentRead;
+    }, [percentRead]);
+
     useLocalStorage(title, percentRead, sidePadding, fontSize, fontFamily);
 
     const changePage = useCallback(
@@ -66,10 +81,39 @@ export default function Book({
                         newValue = pageCount - 1;
                     }
 
-                    scrollContainer.scroll({
-                        left: newValue * pageWidth * noOfPages,
-                        behavior: "smooth",
-                    });
+                    // --- CUSTOM ANIMATION LOGIC ---
+                    if (animationRef.current) {
+                        cancelAnimationFrame(animationRef.current);
+                    }
+
+                    const start = scrollContainer.scrollLeft;
+                    const target = newValue * pageWidth * noOfPages;
+                    const distance = target - start;
+
+                    // Slightly longer duration to let the bounce breathe
+                    const duration = 450; // ms
+                    const startTime = performance.now();
+
+                    const animateScroll = (currentTime: number) => {
+                        const elapsed = currentTime - startTime;
+
+                        if (elapsed < duration) {
+                            // Use the bouncy easing here
+                            const ease = easeOutBack(elapsed / duration);
+                            scrollContainer.scrollLeft =
+                                start + distance * ease;
+                            animationRef.current =
+                                requestAnimationFrame(animateScroll);
+                        } else {
+                            // Snap to final position
+                            scrollContainer.scrollLeft = target;
+                            animationRef.current = null;
+                        }
+                    };
+
+                    animationRef.current = requestAnimationFrame(animateScroll);
+                    // ------------------------------
+
                     return newValue;
                 }
                 return prev;
@@ -85,6 +129,7 @@ export default function Book({
         showTutorial,
     );
 
+    // Initial Load / Local Storage Restoration
     useEffect(() => {
         if (!title) return;
         const local = localStorage.getItem(title);
@@ -92,7 +137,9 @@ export default function Book({
             try {
                 const parsedLocal = JSON.parse(local);
                 if (parsedLocal) {
-                    setPercentRead(parsedLocal.percentRead || 0);
+                    if (parsedLocal.percentRead !== undefined) {
+                        setPercentRead(parsedLocal.percentRead);
+                    }
                     if (parsedLocal.fontSize !== undefined)
                         setFontSize(parsedLocal.fontSize);
                     if (parsedLocal.padding !== undefined)
@@ -107,9 +154,9 @@ export default function Book({
         } else {
             setPercentRead(0);
         }
-        setCurrentPage(1);
-    }, [title, setPercentRead, setFontSize, setPadding, setFontFamily]);
+    }, [title, setFontSize, setPadding, setFontFamily, setPercentRead]);
 
+    // Layout & Scroll Restoration Effect
     useEffect(() => {
         const currentBookRef = bookRef.current;
         if (!currentBookRef || pageWidth <= 0 || pageHeight <= 0) return;
@@ -123,45 +170,56 @@ export default function Book({
             );
             currentBookRef.style.setProperty("--font-size", `${fontSize}em`);
             currentBookRef.style.setProperty("--font-family", fontFamily);
-
-            // Inject the exact calculated width to fix Safari layout issues
             currentBookRef.style.setProperty(
                 "--computed-width",
                 `${pageWidth}px`,
             );
-
             currentBookRef.style.maxHeight = `${pageHeight}px`;
 
-            const totalWidth = currentBookRef.scrollWidth;
-            const newPageCount =
-                pageWidth > 0 && totalWidth > 0
-                    ? Math.round(totalWidth / pageWidth)
-                    : 0;
+            // FORCE REFLOW
+            void currentBookRef.offsetHeight;
 
-            const noOfWholePages =
-                noOfPages === 1 ? newPageCount : Math.round(newPageCount / 2);
-            setPageCount(noOfWholePages);
+            requestAnimationFrame(() => {
+                if (!currentBookRef) return;
 
-            if (noOfWholePages > 0 && currentBookRef.clientWidth > 0) {
-                let targetPage = Math.round(noOfWholePages * percentRead);
-                targetPage = Math.max(
-                    0,
-                    Math.min(noOfWholePages - 1, targetPage),
-                );
-                if (currentPage !== targetPage) {
+                const totalWidth = currentBookRef.scrollWidth;
+                const newPageCount =
+                    pageWidth > 0 && totalWidth > 0
+                        ? Math.round(totalWidth / pageWidth)
+                        : 0;
+
+                const noOfWholePages =
+                    noOfPages === 1
+                        ? newPageCount
+                        : Math.round(newPageCount / 2);
+                setPageCount(noOfWholePages);
+
+                if (noOfWholePages > 0 && currentBookRef.clientWidth > 0) {
+                    const currentPercent = percentReadRef.current;
+
+                    let targetPage = Math.round(
+                        noOfWholePages * currentPercent,
+                    );
+                    targetPage = Math.max(
+                        0,
+                        Math.min(noOfWholePages - 1, targetPage),
+                    );
+
                     setCurrentPage(targetPage);
                     currentBookRef.scrollLeft =
                         targetPage * pageWidth * noOfPages;
+                } else {
+                    setCurrentPage(1);
                 }
-            } else {
                 setIsLoading(false);
-                setCurrentPage(1);
-            }
-            setIsLoading(false);
+            });
         }, 400);
 
         return () => {
             clearTimeout(timer);
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+            }
         };
     }, [
         pageWidth,
@@ -190,7 +248,7 @@ export default function Book({
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [changePage, pageWidth, percentRead]);
+    }, [changePage]);
 
     return (
         <>

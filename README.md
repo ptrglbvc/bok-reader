@@ -19,7 +19,6 @@ yarn add bok
 ```jsx
 import React from "react";
 import { BokReader } from "bok-reader";
-import "bok-reader/dist/style.css"; // this css file is absolutely necessary to render the component properly
 
 function MyBookViewer() {
     const epubUrl = "https://www.path.com/to/your/book.epub"; // Can be a URL, File object, or ArrayBuffer
@@ -60,8 +59,6 @@ export default MyBookViewer;
 ## Dependencies
 
 -   jszip
--   react-spinners
--   styled-components
 
 ## Peer Dependencies
 

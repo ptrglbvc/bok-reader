@@ -252,8 +252,8 @@ export default function useEpub() {
                     .map((d: string) => d.trim())
                     .filter((d: string) => {
                         if (!d) return false;
-                        return !enemiesOfTheState.some((prop) =>
-                            new RegExp(`^${prop}*:`, "i").test(d),
+                        return !enemiesOfTheState.some(
+                            (prop) => new RegExp(`^${prop}s*:`, "i").test(d), // was RegExp(`^${prop}\s*:`, "i") before, eslint complained. write angry email to eslint if it causes any problems
                         );
                     })
                     .join("; ");

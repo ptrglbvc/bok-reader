@@ -1,7 +1,7 @@
 {
   "name": "bok-reader",
   "private": false,
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "main": "dist/bok.umd.js",
   "module": "dist/bok.es.js",
@@ -27,7 +27,7 @@
     "@types/node": "^22.14.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.2", 
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
     "@vitejs/plugin-react": "^4.2.1",
     "ajv": "^8.17.1",

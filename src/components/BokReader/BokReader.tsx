@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import useEpub from "../../hooks/useEpub";
+import usePersistentState from "../../hooks/usePersistentState"
 import Book from "../Book";
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
@@ -18,22 +19,6 @@ interface BokReaderProps {
 }
 
 
-function usePersistentFlag(
-    key: string,
-    defaultValue: boolean,
-): [boolean, (v: boolean) => void] {
-    const [value, setValue] = useState(() => {
-        // SSR Check
-        if (typeof window === "undefined") return defaultValue;
-        const stored = localStorage.getItem(key);
-        return stored === null ? defaultValue : stored === "true";
-    });
-    useEffect(() => {
-        localStorage.setItem(key, value ? "true" : "false");
-    }, [key, value]);
-    return [value, setValue];
-}
-
 const BokReader: React.FC<BokReaderProps> = ({
     epubDataSource,
     onTitleChange,
@@ -48,17 +33,15 @@ const BokReader: React.FC<BokReaderProps> = ({
         useEpub();
 
     const [isOptionsMenuVisible, setIsOptionsMenuVisible] = useState(false);
-    const [fontSize, setFontSize] = useState(1.2);
-    const [sidePadding, setSidePadding] = useState(30);
-    const [fontFamily, setFontFamily] = useState("Inter");
-    const [colorScheme, setColorScheme] = useState("Amoled Dark");
+
+    const [sidePadding, setSidePadding] = usePersistentState<number>("bok_global_side_padding", 30);
+    const [fontSize, setFontSize] = usePersistentState<number>("bok_global_fontsize", 1.2);
+    const [fontFamily, setFontFamily] = usePersistentState<string>("bok_global_font_family", "Inter");
+    const [colorScheme, setColorScheme] = usePersistentState<string>("bok_global_theme", "Amoled Dark");
 
     const bokReaderWrapperRef = useRef<HTMLDivElement>(null);
 
-    const [tutorialShown, setTutorialShown] = usePersistentFlag(
-        "bokreader_tutorial_shown",
-        false,
-    );
+    const [tutorialShown, setTutorialShown] = usePersistentState<boolean>("bok_tutorial_shown", false);
     const [showTutorial, setShowTutorial] = useState(!tutorialShown);
 
     useEffect(() => {
@@ -142,9 +125,6 @@ const BokReader: React.FC<BokReaderProps> = ({
                         fontSize={fontSize}
                         sidePadding={sidePadding}
                         fontFamily={fontFamily}
-                        setPadding={setSidePadding}
-                        setFontSize={setFontSize}
-                        setFontFamily={setFontFamily}
                         isOptionMenuVisible={isOptionsMenuVisible}
                         containerElementRef={bokReaderWrapperRef}
                         showTutorial={showTutorial}

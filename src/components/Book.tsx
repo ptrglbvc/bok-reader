@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import usePage from "../hooks/usePage";
 import usePercentageRead from "../hooks/usePercentageRead";
-import useLocalStorage from "../hooks/useLocalStorage";
+import usePersistentState from "../hooks/usePersistentState";
 import useNavigation from "../hooks/useNavigation";
 import PageNumber from "./PageNumber";
 
@@ -19,10 +19,7 @@ interface PageProps {
     fontSize: number;
     fontFamily: string;
     sidePadding: number;
-    setFontSize: React.Dispatch<React.SetStateAction<number>>;
     showTutorial: boolean;
-    setPadding: React.Dispatch<React.SetStateAction<number>>;
-    setFontFamily: React.Dispatch<React.SetStateAction<string>>;
     isOptionMenuVisible: boolean;
     containerElementRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -43,9 +40,6 @@ export default function Book({
     sidePadding,
     fontFamily,
     isOptionMenuVisible,
-    setFontSize,
-    setPadding,
-    setFontFamily,
     containerElementRef,
     showTutorial,
 }: PageProps) {
@@ -56,14 +50,33 @@ export default function Book({
     const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(0);
 
+    // Persistent state for reading progress per book
+    const [savedProgress, setSavedProgress] = usePersistentState<number>(
+        `bok_progress_${title}`,
+        0
+    );
+
     const percentReadRef = useRef(percentRead);
     const animationRef = useRef<number | null>(null);
 
+    // Sync percentRead to ref for use in timeouts/intervals
     useEffect(() => {
         percentReadRef.current = percentRead;
     }, [percentRead]);
 
-    useLocalStorage(title, percentRead, sidePadding, fontSize, fontFamily);
+    // Save progress when reading
+    useEffect(() => {
+        if (percentRead > 0) {
+            setSavedProgress(percentRead);
+        }
+    }, [percentRead, setSavedProgress]);
+
+    // Restore progress on load/title change
+    useEffect(() => {
+        if (savedProgress > 0) {
+            setPercentRead(savedProgress);
+        }
+    }, [savedProgress, setPercentRead]);
 
     const changePage = useCallback(
         (amount: number) => {
@@ -128,33 +141,6 @@ export default function Book({
         containerElementRef,
         showTutorial,
     );
-
-    // Initial Load / Local Storage Restoration
-    useEffect(() => {
-        if (!title) return;
-        const local = localStorage.getItem(title);
-        if (local) {
-            try {
-                const parsedLocal = JSON.parse(local);
-                if (parsedLocal) {
-                    if (parsedLocal.percentRead !== undefined) {
-                        setPercentRead(parsedLocal.percentRead);
-                    }
-                    if (parsedLocal.fontSize !== undefined)
-                        setFontSize(parsedLocal.fontSize);
-                    if (parsedLocal.padding !== undefined)
-                        setPadding(parsedLocal.padding);
-                    if (parsedLocal.fontFamily !== undefined)
-                        setFontFamily(parsedLocal.fontFamily);
-                }
-            } catch (e) {
-                console.error("Failed to parse local storage for", title, e);
-                setPercentRead(0);
-            }
-        } else {
-            setPercentRead(0);
-        }
-    }, [title, setFontSize, setPadding, setFontFamily, setPercentRead]);
 
     // Layout & Scroll Restoration Effect
     useEffect(() => {

@@ -8,10 +8,13 @@ interface OptionsMenuProps {
     fontSize: number;
     padding: number;
     fontFamily: string;
+    colorScheme: string;
     setFontSize: React.Dispatch<React.SetStateAction<number>>;
     setPadding: React.Dispatch<React.SetStateAction<number>>;
     setFontFamily: React.Dispatch<React.SetStateAction<string>>;
+    setColorScheme: React.Dispatch<React.SetStateAction<string>>;
     supportedFonts: { displayName: string; name: string }[];
+    supportedColorschemes: { displayName: string; name: string }[];
 }
 
 function OptionsMenu({
@@ -19,10 +22,13 @@ function OptionsMenu({
     fontSize,
     padding,
     fontFamily,
+    colorScheme,
     setFontSize,
     setPadding,
+    setColorScheme,
     setFontFamily,
-    supportedFonts,
+    supportedFonts = [],
+    supportedColorschemes = []
 }: OptionsMenuProps) {
     const [isClosing, setIsClosing] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
@@ -33,6 +39,12 @@ function OptionsMenu({
     const allFonts = [
         { displayName: "System Default", name: "system-ui" },
         ...supportedFonts,
+    ];
+
+    const allColorSchemes = [
+        { displayName: "Amoled Dark", name: "amoled" },
+        { displayName: "Da Vinci", name: "davinci" },
+        ...supportedColorschemes,
     ];
 
     useEffect(() => {
@@ -136,6 +148,28 @@ function OptionsMenu({
                             }}
                         >
                             {allFonts.map((font) => (
+                                <option
+                                    key={font.displayName}
+                                    value={font.name}
+                                >
+                                    {font.displayName}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="font-family-buttons">
+                        <div className="option-label">Color Scheme</div>
+                        <select
+                            value={colorScheme}
+                            onChange={(e) => {
+                                const selected = allColorSchemes.find(
+                                    (f) => f.name === e.target.value,
+                                );
+                                if (selected) setColorScheme(selected.name);
+                            }}
+                        >
+                            {allColorSchemes.map((font) => (
                                 <option
                                     key={font.displayName}
                                     value={font.name}

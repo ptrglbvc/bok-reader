@@ -1,4 +1,18 @@
-  .bok-reader-container {
+.bok-reader-container {
+    --bg-color: black;
+    --text-color: rgb(215, 215, 215);
+    --page-num-text: rgba(255, 255, 255, 0.4);
+    --page-num-bg: rgba(0, 0, 0, 0.3);
+    --page-num-border: transparent;
+
+    &.davinci {
+        --bg-color: #dccba3;        
+        --text-color: #463425;     
+        --page-num-text: #2b1f15;
+        --page-num-bg: rgba(70, 52, 37, 0.1);
+        --page-num-border: rgba(70, 52, 37, 0.2);
+    }
+
     width: 100%;
     height: 100%;
     position: relative;
@@ -10,12 +24,14 @@
     font-weight: 400;
     text-align: justify;
     color-scheme: dark light;
-    color: rgb(215, 215, 215) !important;
-    background-color: black;
+    
+    color: var(--text-color) !important;
+    background-color: var(--bg-color);
+
     overflow: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
-     &::-webkit-scrollbar { display: none; }
+      &::-webkit-scrollbar { display: none; }
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -34,7 +50,7 @@
         -webkit-column-fill: auto;
         -webkit-column-gap: calc(2 * var(--side-padding));
 
-        overflow-x: hidden; /* this controls the scrolling of the book, will want to turn this to auto in the future. */
+        overflow-x: hidden;
         overscroll-behavior-x: none;
 
         overflow-y: hidden;
@@ -43,15 +59,15 @@
 
         scrollbar-width: none;
         -ms-overflow-style: none;
-         &::-webkit-scrollbar {
+          &::-webkit-scrollbar {
             display: none;
-         }
+          }
 
-         > * {
+          > * {
               break-inside: avoid-column;
               page-break-inside: avoid;
               -webkit-column-break-inside: avoid;
-         }
+          }
     }
 
     @container (aspect-ratio > 1/1) {
@@ -124,11 +140,15 @@
         font-size: 12px;
         font-weight: 500;
         letter-spacing: 0.5px;
-        color: rgba(255, 255, 255, 0.4);
         z-index: 10;
         pointer-events: none;
         font-variant-numeric: tabular-nums;
-        background: rgba(0, 0, 0, 0.3);
+        
+        /* Updated to use variables */
+        color: var(--page-num-text);
+        background: var(--page-num-bg);
+        border: 1px solid var(--page-num-border);
+        
         padding: 4px 10px;
         border-radius: 12px;
         backdrop-filter: blur(2px);

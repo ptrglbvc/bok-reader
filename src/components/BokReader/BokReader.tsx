@@ -51,6 +51,7 @@ const BokReader: React.FC<BokReaderProps> = ({
     const [fontSize, setFontSize] = useState(1.2);
     const [sidePadding, setSidePadding] = useState(30);
     const [fontFamily, setFontFamily] = useState("Inter");
+    const [colorScheme, setColorScheme] = useState("Amoled Dark");
 
     const bokReaderWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -120,7 +121,7 @@ const BokReader: React.FC<BokReaderProps> = ({
 
     return (
         <div
-            className={`bok-reader-container ${className || ""}`}
+            className={`bok-reader-container ${colorScheme === 'davinci' ? 'davinci' : ''}`}
             style={{ ...style, ...dynamicCssVariables } as React.CSSProperties}
             ref={bokReaderWrapperRef}
         >
@@ -155,10 +156,13 @@ const BokReader: React.FC<BokReaderProps> = ({
                             fontSize={fontSize}
                             padding={sidePadding}
                             fontFamily={fontFamily}
+                            colorScheme={colorScheme}
                             setPadding={setSidePadding}
                             setFontSize={setFontSize}
                             setFontFamily={setFontFamily}
+                            setColorScheme={setColorScheme}
                             supportedFonts={supportedFonts}
+                            supportedColorschemes={[]}
                         />
                     )}
 

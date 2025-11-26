@@ -107,17 +107,19 @@
 
     .book-page img,
     .book-page svg {
-        max-height: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
         width: auto !important;
-        border-radius: 10px;
-        max-height: calc(100% - var(--top-padding) - var(--bottom-padding)) !important;
+        height: auto !important;
+
+        /* 100cqh = 100% of the height of .bok-reader-container */
+        max-height: calc(100cqh - var(--top-padding) - var(--bottom-padding) - 20px) !important;
+
         display: block;
-        margin-left: auto;
-        margin-right: auto;
+        margin: 0 auto 10px auto;
+        border-radius: 10px;
         object-fit: contain;
         box-sizing: border-box;
+
+        /* COLUMN RULES */
         break-inside: avoid-column;
         page-break-inside: avoid;
         -webkit-column-break-inside: avoid;

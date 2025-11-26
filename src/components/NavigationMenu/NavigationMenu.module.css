@@ -151,9 +151,16 @@
     color: white;
     border-radius: 8px;
     padding: 8px;
-    width: 60px;
+    width: 50px;
     text-align: center;
     font-weight: bold;
+    -moz-appearance: textfield;
+}
+
+.jumper-input::-webkit-outer-spin-button,
+.jumper-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .jumper-slider {

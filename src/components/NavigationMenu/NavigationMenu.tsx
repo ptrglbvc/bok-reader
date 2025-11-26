@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { TocItem } from "../../hooks/useEpub";
 import { calculatePageOfElement } from "../../helpful_functions/calculatePageOfElement";
 import styles from "./NavigationMenu.module.css";
@@ -83,9 +83,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         onGoToPage(target - 1); 
     };
 
-    const handleSliderCommit = () => {
-        onGoToPage(inputPage - 1);
-    };
+    
 
     const renderToc = (items: TocItem[], level = 0) => {
         return (
@@ -141,16 +139,6 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 </div>
 
                 <div className={styles['page-jumper']}>
-                    <input 
-                        type="range" 
-                        min="1" 
-                        max={totalPages || 1} 
-                        value={inputPage}
-                        onChange={(e) => setInputPage(parseInt(e.target.value))}
-                        onMouseUp={handleSliderCommit}
-                        onTouchEnd={handleSliderCommit}
-                        className={styles['jumper-slider']}
-                    />
                     <div className={styles['jumper-controls']}>
                         <input 
                             className={styles['jumper-input']}

@@ -21,9 +21,10 @@
 
 .options-menu {
     position: absolute;
-    bottom: 20px; /* Lifted slightly off the bottom */
+    bottom: 20px;
     left: 50%;
-    width: calc(100% - 40px); /* floating card look */
+    transform: translateX(-50%) translateY(120%);
+    width: calc(100% - 40px);
     max-width: 400px;
     background: rgba(30, 30, 30, 0.95);
     backdrop-filter: blur(20px);
@@ -35,8 +36,8 @@
     color: #fff;
     max-height: 80%;
     overflow-y: auto;
-    transform: translateX(-50%) translateY(120%);
-    transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1); /* Smooth exponential ease */
+    
+    transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
@@ -46,6 +47,22 @@
 
 .options-menu.slide-down {
     transform: translateX(-50%) translateY(120%);
+}
+
+@media (min-width: 768px) {
+    .options-menu {
+        left: auto;
+        right: 20px;  
+        transform: translateY(120%); 
+    }
+
+    .options-menu.visible {
+        transform: translateY(0);
+    }
+
+    .options-menu.slide-down {
+        transform: translateY(120%);
+    }
 }
 
 .options-menu h2 {

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import useEpub from "../../hooks/useEpub";
 import usePersistentState from "../../hooks/usePersistentState"
-import Book from "../Book";
+import Book, { BookHandle } from "../Book"; 
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
+import NavigationMenu from "../NavigationMenu/NavigationMenu"; 
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
 import "./BokReader.css"
 
 import { calculatePageOfElement } from "../../helpful_functions/calculatePageOfElement";
-// Inside the component, add this effect:
 
 interface BokReaderProps {
     epubDataSource: File | ArrayBuffer | string | null;
@@ -21,7 +21,6 @@ interface BokReaderProps {
     color?: string;
 }
 
-
 const BokReader: React.FC<BokReaderProps> = ({
     epubDataSource,
     onTitleChange,
@@ -32,10 +31,10 @@ const BokReader: React.FC<BokReaderProps> = ({
     color,
     supportedFonts = [],
 }) => {
-    const { title, rawContent, isLoading, error, loadEpub, setIsLoading } =
+    const { title, rawContent, toc, isLoading, error, loadEpub, setIsLoading } =
         useEpub();
 
-    const [isOptionsMenuVisible, setIsOptionsMenuVisible] = useState(false);
+    const [activeMenu, setActiveMenu] = useState<'none' | 'options' | 'navigation'>('none');
 
     const [sidePadding, setSidePadding] = usePersistentState<number>("bok_global_side_padding", 30);
     const [fontSize, setFontSize] = usePersistentState<number>("bok_global_fontsize", 1.2);
@@ -43,14 +42,13 @@ const BokReader: React.FC<BokReaderProps> = ({
     const [colorScheme, setColorScheme] = usePersistentState<string>("bok_global_theme", "Amoled Dark");
 
     const bokReaderWrapperRef = useRef<HTMLDivElement>(null);
+    const bookComponentRef = useRef<BookHandle>(null);
+
+    const [currentBookPage, setCurrentBookPage] = useState(0);
+    const [totalBookPages, setTotalBookPages] = useState(0);
 
     const [tutorialShown, setTutorialShown] = usePersistentState<boolean>("bok_tutorial_shown", false);
     const [showTutorial, setShowTutorial] = useState(!tutorialShown);
-
-    // for debugging and testing in the console, will delete as soon as function is verified.
-    useEffect(() => {
-        (window as any).calculatePageOfElement = calculatePageOfElement;
-    }, []);
 
     useEffect(() => {
         if (tutorialShown) setShowTutorial(false);
@@ -127,20 +125,24 @@ const BokReader: React.FC<BokReaderProps> = ({
                         />
                     )}
                     <Book
+                        ref={bookComponentRef}
                         content={rawContent}
                         title={title}
                         setIsLoading={setIsLoading}
                         fontSize={fontSize}
                         sidePadding={sidePadding}
                         fontFamily={fontFamily}
-                        isOptionMenuVisible={isOptionsMenuVisible}
+                        isOptionMenuVisible={activeMenu !== 'none'}
                         containerElementRef={bokReaderWrapperRef}
                         showTutorial={showTutorial}
+                        // Sync
+                        onPageChange={setCurrentBookPage}
+                        onPageCountChange={setTotalBookPages}
                     />
 
-                    {isOptionsMenuVisible && (
+                    {activeMenu === 'options' && (
                         <OptionsMenu
-                            onClose={() => setIsOptionsMenuVisible(false)}
+                            onClose={() => setActiveMenu('none')}
                             fontSize={fontSize}
                             padding={sidePadding}
                             fontFamily={fontFamily}
@@ -154,15 +156,36 @@ const BokReader: React.FC<BokReaderProps> = ({
                         />
                     )}
 
-                    {!isOptionsMenuVisible && (
-                        <div
-                            className="bottom-click-area"
-                            onClick={() => {
-                                if (!showTutorial)
-                                    setIsOptionsMenuVisible(true);
-                            }}
-                            aria-label="Open reader options"
+                    {activeMenu === 'navigation' && !isLoading && (
+                        <NavigationMenu 
+                            toc={toc}
+                            currentPage={currentBookPage}
+                            totalPages={totalBookPages}
+                            onClose={() => setActiveMenu('none')}
+                            onGoToPage={(page) => bookComponentRef.current?.goToPage(page)}
+                            onChapterClick={(href) => bookComponentRef.current?.findAndJumpToHref(href)}
                         />
+                    )}
+
+                    {activeMenu === 'none' && !showTutorial && !isLoading && (
+                        <div className="bottom-interaction-layer">
+                            <div 
+                                className="trigger-zone" 
+                                onClick={() => { console.log("Left Click - Reserved") }}
+                            />
+                            
+                            <div 
+                                className="trigger-zone" 
+                                onClick={() => setActiveMenu('navigation')}
+                                aria-label="Open Navigation"
+                            />
+                            
+                            <div 
+                                className="trigger-zone" 
+                                onClick={() => setActiveMenu('options')}
+                                aria-label="Open Settings"
+                            />
+                        </div>
                     )}
                 </>
             )}
@@ -176,4 +199,3 @@ const BokReader: React.FC<BokReaderProps> = ({
 };
 
 export default BokReader;
-export { BokReader };

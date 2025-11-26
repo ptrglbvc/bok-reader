@@ -5,6 +5,8 @@ import React, {
     Dispatch,
     SetStateAction,
     useCallback,
+    useImperativeHandle,
+    forwardRef
 } from "react";
 import usePage from "../hooks/usePage";
 import usePercentageRead from "../hooks/usePercentageRead";
@@ -12,6 +14,12 @@ import usePersistentState from "../hooks/usePersistentState";
 import useNavigation from "../hooks/useNavigation";
 import PageNumber from "./PageNumber";
 import { calculatePageOfElement } from "../helpful_functions/calculatePageOfElement";
+
+// 1. Define Handle
+export interface BookHandle {
+    goToPage: (page: number) => void;
+    findAndJumpToHref: (href: string) => void;
+}
 
 interface PageProps {
     content: string;
@@ -23,15 +31,19 @@ interface PageProps {
     showTutorial: boolean;
     isOptionMenuVisible: boolean;
     containerElementRef: React.RefObject<HTMLDivElement | null>;
+    // 2. Add callbacks
+    onPageChange?: (page: number) => void;
+    onPageCountChange?: (count: number) => void;
 }
 
 const easeOutBack = (x: number): number => {
-    const c1 = 1.1; // ammount of bounce
+    const c1 = 1.1; 
     const c3 = c1 + 1;
     return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
 };
 
-export default function Book({
+// 3. Use forwardRef
+const Book = forwardRef<BookHandle, PageProps>(({
     content,
     title,
     setIsLoading,
@@ -41,7 +53,9 @@ export default function Book({
     isOptionMenuVisible,
     containerElementRef,
     showTutorial,
-}: PageProps) {
+    onPageChange,
+    onPageCountChange
+}, ref) => {
     const bookRef = useRef<HTMLDivElement>(null);
 
     const [pageWidth, pageHeight, noOfPages] = usePage(containerElementRef);
@@ -57,6 +71,16 @@ export default function Book({
     const percentReadRef = useRef(percentRead);
     const animationRef = useRef<number | null>(null);
 
+    // Sync Page Count up
+    useEffect(() => {
+        if(onPageCountChange) onPageCountChange(pageCount);
+    }, [pageCount, onPageCountChange]);
+
+    // Sync Current Page up
+    useEffect(() => {
+        if(onPageChange) onPageChange(currentPage);
+    }, [currentPage, onPageChange]);
+
     useEffect(() => {
         percentReadRef.current = percentRead;
     }, [percentRead]);
@@ -71,7 +95,6 @@ export default function Book({
 
 
     // --- ANIMATION & NAVIGATION LOGIC ---
-
     const performScrollAnimation = useCallback((targetPage: number) => {
         const scrollContainer = bookRef.current;
         if (!scrollContainer) return;
@@ -117,6 +140,23 @@ export default function Book({
         });
     }, [pageCount, performScrollAnimation]);
 
+    // 4. Expose methods via ref
+    useImperativeHandle(ref, () => ({
+        goToPage,
+        findAndJumpToHref: (href: string) => {
+             const elementId = href.startsWith("#") ? href.substring(1) : href;
+             const targetElement = document.getElementById(elementId);
+             if (targetElement) {
+                 try {
+                     const targetPage = calculatePageOfElement(targetElement);
+                     goToPage(targetPage);
+                 } catch (err) {
+                     console.warn("Could not calculate page for link", err);
+                 }
+             }
+        }
+    }));
+
     useNavigation(
         changePage,
         isOptionMenuVisible,
@@ -124,27 +164,21 @@ export default function Book({
         showTutorial,
     );
 
-
     // --- LINK INTERCEPTION ---
     useEffect(() => {
         const container = bookRef.current;
         if (!container) return;
-
         const handleLinkClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             const anchor = target.closest("a");
-
-            // Check if it's an internal hash link (useEpub has sanitized these to start with #)
             if (anchor && anchor.getAttribute("href")?.startsWith("#")) {
                 e.preventDefault();
                 const rawHref = anchor.getAttribute("href")!;
                 const elementId = decodeURIComponent(rawHref.substring(1));
                 const targetElement = document.getElementById(elementId);
-
                 if (targetElement) {
                     try {
                         const targetPage = calculatePageOfElement(targetElement);
-                        console.log(targetPage)
                         goToPage(targetPage);
                     } catch (err) {
                         console.warn("Could not calculate page for link", err);
@@ -152,43 +186,34 @@ export default function Book({
                 }
             }
         };
-
         container.addEventListener("click", handleLinkClick);
         return () => container.removeEventListener("click", handleLinkClick);
     }, [goToPage]);
-
 
     // --- LAYOUT & RESIZE ---
     useEffect(() => {
         const currentBookRef = bookRef.current;
         if (!currentBookRef || pageWidth <= 0 || pageHeight <= 0) return;
-
         setIsLoading(true);
-
         const timer = setTimeout(() => {
             currentBookRef.style.setProperty("--side-padding", `${sidePadding}px`);
             currentBookRef.style.setProperty("--font-size", `${fontSize}em`);
             currentBookRef.style.setProperty("--font-family", fontFamily);
             currentBookRef.style.setProperty("--computed-width", `${pageWidth}px`);
             currentBookRef.style.maxHeight = `${pageHeight}px`;
-
             void currentBookRef.offsetHeight; // Force reflow
-
             requestAnimationFrame(() => {
                 if (!currentBookRef) return;
                 const totalWidth = currentBookRef.scrollWidth;
                 const newPageCount = pageWidth > 0 && totalWidth > 0
                         ? Math.round(totalWidth / pageWidth)
                         : 0;
-
                 const noOfWholePages = noOfPages === 1 ? newPageCount : Math.round(newPageCount / 2);
                 setPageCount(noOfWholePages);
-
                 if (noOfWholePages > 0 && currentBookRef.clientWidth > 0) {
                     const currentPercent = percentReadRef.current;
                     let targetPage = Math.round(noOfWholePages * currentPercent);
                     targetPage = Math.max(0, Math.min(noOfWholePages - 1, targetPage));
-
                     setCurrentPage(targetPage);
                     currentBookRef.scrollLeft = targetPage * pageWidth * noOfPages;
                 } else {
@@ -197,12 +222,12 @@ export default function Book({
                 setIsLoading(false);
             });
         }, 400);
-
         return () => {
             clearTimeout(timer);
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
         };
     }, [pageWidth, pageHeight, sidePadding, fontSize, fontFamily, noOfPages, content, title, setIsLoading]);
+
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -229,4 +254,6 @@ export default function Book({
             <PageNumber pages={pageCount} currentPage={currentPage} />
         </>
     );
-}
+});
+
+export default Book;

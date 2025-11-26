@@ -42,8 +42,9 @@ const useNavigation = (
         return () => {
             document.removeEventListener("selectionchange", handleSelection);
         };
-    }, []); // dependency array can be empty because it doesn't use anything from component scope
+    }, []);
 
+    // --- TOUCH EVENTS ---
     useEffect(() => {
         const handleTouchStart = () => {
             longPressTimerRef.current = window.setTimeout(() => {
@@ -52,11 +53,17 @@ const useNavigation = (
         };
 
         const handleTouchEnd = (event: TouchEvent) => {
-            if (longPressTimerRef.current && selectedText.current) {
+            // FIX: Ignore if we tapped a link
+            const target = event.target as HTMLElement;
+            if (target.closest("a")) return;
+
+            if (longPressTimerRef.current && selectedText.current === "") {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;
-                const { pageX, pageY } = event.touches[0];
-                handlePageClick(pageX, pageY);
+                const { pageX, pageY } = event.touches[0]; // Note: changedPageX might be needed if touches is empty on end
+                // Correction for TouchEnd: event.touches is empty on end, use changedTouches
+                const touch = event.changedTouches[0];
+                handlePageClick(touch.pageX, touch.pageY);
             }
         };
 
@@ -69,14 +76,19 @@ const useNavigation = (
         };
     }, [pageWidth, handlePageClick]);
 
+    // --- MOUSE EVENTS ---
     useEffect(() => {
         const container = containerElementRef.current;
 
-        const handleTouchStart = () => {
+        const handleMouseDown = () => {
             longPressTimerRef.current = window.setTimeout(() => {}, 200);
         };
 
-        const handleTouchEnd = (event: MouseEvent) => {
+        const handleMouseUp = (event: MouseEvent) => {
+            // FIX: Ignore if we clicked a link
+            const target = event.target as HTMLElement;
+            if (target.closest("a")) return;
+
             if (longPressTimerRef.current && !selectedText.current) {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;
@@ -84,12 +96,12 @@ const useNavigation = (
             }
         };
 
-        container?.addEventListener("mousedown", handleTouchStart);
-        container?.addEventListener("mouseup", handleTouchEnd);
+        container?.addEventListener("mousedown", handleMouseDown);
+        container?.addEventListener("mouseup", handleMouseUp);
 
         return () => {
-            container?.removeEventListener("mousedown", handleTouchStart);
-            container?.removeEventListener("mouseup", handleTouchEnd);
+            container?.removeEventListener("mousedown", handleMouseDown);
+            container?.removeEventListener("mouseup", handleMouseUp);
         };
     }, [pageWidth, isOptionMenuVisible, handlePageClick, containerElementRef]);
 };

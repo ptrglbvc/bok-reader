@@ -107,6 +107,10 @@
 
     .book-page img,
     .book-page svg {
+        max-height: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        width: auto !important;
         border-radius: 10px;
         max-height: calc(100% - var(--top-padding) - var(--bottom-padding)) !important;
         display: block;

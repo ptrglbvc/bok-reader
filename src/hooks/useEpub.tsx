@@ -1,13 +1,32 @@
-// src/hooks/useEpub.tsx
 import JSZip from "jszip";
 import { useState, useCallback, useRef } from "react";
 
+// 1. New Types for the Table of Contents
+export type TocItem = {
+    label: string;
+    href: string; // Internal link (#chapterId_elementId)
+    subitems: TocItem[];
+};
+
 type BlobImages = { [key: string]: string };
+
+function resolvePath(base: string, relative: string) {
+    const stack = base.split("/");
+    stack.pop();
+    const parts = relative.split("/");
+    for (const part of parts) {
+        if (part === ".") continue;
+        if (part === "..") stack.pop();
+        else stack.push(part);
+    }
+    return stack.join("/");
+}
 
 export default function useEpub() {
     const [rawContent, setRawContent] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [title, setTitle] = useState("");
+    const [toc, setToc] = useState<TocItem[]>([]); // 2. State for TOC
     const [error, setError] = useState<string | null>(null);
 
     let currentObfFolder = "";
@@ -16,20 +35,14 @@ export default function useEpub() {
     const styleLinkElement = useRef<HTMLLinkElement | null>(null);
     const currentImages: BlobImages = {};
 
-    const validTypes = [
-        "text/html",
-        "text/xml",
-        "application/xml",
-        "application/xhtml+xml",
-        "image/svg+xml",
-    ];
-
     const loadEpub = useCallback(
         async (source: File | ArrayBuffer | string) => {
             setIsLoading(true);
             setRawContent("");
+            setToc([]);
             setTitle("Loading...");
             setError(null);
+
             if (styleLinkElement.current) {
                 document.head.removeChild(styleLinkElement.current);
                 URL.revokeObjectURL(styleLinkElement.current.href);
@@ -39,118 +52,84 @@ export default function useEpub() {
             try {
                 let buffer: ArrayBuffer;
                 if (typeof source === "string") {
-                    // Fetch from URL
                     const response = await fetch(source);
-                    if (!response.ok) {
-                        throw new Error(
-                            `HTTP error! status: ${response.status} ${response.statusText}`,
-                        );
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     buffer = await response.arrayBuffer();
                 } else if (source instanceof File) {
-                    // Read from File object
                     buffer = await source.arrayBuffer();
                 } else {
-                    // Assume it's already an ArrayBuffer
                     buffer = source;
                 }
 
-                if (!buffer || buffer.byteLength === 0) {
-                    throw new Error(
-                        "EPUB source is empty or could not be read.",
-                    );
-                }
+                if (!buffer || buffer.byteLength === 0) throw new Error("EPUB source is empty.");
 
                 currentZip.current = await JSZip.loadAsync(buffer);
                 await readContainer();
             } catch (err: unknown) {
-                const errorMessage =
-                    err instanceof Error
-                        ? err.message
-                        : "An unknown error occurred while fetching or loading the EPUB.";
                 console.error("Error processing EPUB source:", err);
-                setError(errorMessage);
-                setRawContent("");
-                setTitle("");
+                setError(err instanceof Error ? err.message : "Unknown error");
                 setIsLoading(false);
             }
         },
-        // eslint-disable-next-line
-        [],
+        []
     );
 
     async function readContainer() {
         if (!currentZip.current) throw new Error("Zip not loaded");
 
-        const containerPath = "META-INF/container.xml";
-        const containerFile = currentZip.current.file(containerPath);
-        if (!containerFile)
-            throw new Error("META-INF/container.xml not found.");
+        const containerFile = currentZip.current.file("META-INF/container.xml");
+        if (!containerFile) throw new Error("META-INF/container.xml not found.");
 
         const containerContent = await containerFile.async("text");
-        const opfPath = getOpfPath(containerContent);
-        if (!opfPath)
-            throw new Error("OPF file path not found in container.xml.");
+        const parser = new DOMParser();
+        const containerDOM = parser.parseFromString(containerContent, "application/xml");
+        const rootfile = containerDOM.querySelector('rootfile[media-type="application/oebps-package+xml"]');
+        const opfPath = rootfile?.getAttribute("full-path");
+
+        if (!opfPath) throw new Error("OPF file path not found.");
 
         currentObfFolder = opfPath.substring(0, opfPath.lastIndexOf("/") + 1);
-
         const opfFile = currentZip.current.file(opfPath);
         if (!opfFile) throw new Error(`OPF file not found at path: ${opfPath}`);
 
         const opfContent = await opfFile.async("text");
-        const parser = new DOMParser();
         const parsedOpf = parser.parseFromString(opfContent, "application/xml");
 
-        const parserError = parsedOpf.querySelector("parsererror");
-        if (parserError) {
-            throw new Error(
-                `Error parsing OPF file: ${
-                    parserError.textContent || "Unknown XML parse error"
-                }`,
-            );
-        }
+        if (parsedOpf.querySelector("parsererror")) throw new Error("Error parsing OPF file.");
 
         getTitle(parsedOpf);
         await parseManifestAndSpine(parsedOpf);
     }
 
-    function getOpfPath(containerContent: string): string | null {
-        const parser = new DOMParser();
-        const containerDOM = parser.parseFromString(
-            containerContent,
-            "application/xml",
-        );
-        const rootfile = containerDOM.querySelector(
-            'rootfile[media-type="application/oebps-package+xml"]',
-        );
-        const fullPath = rootfile?.getAttribute("full-path");
-        return fullPath ?? null;
-    }
-
     function getTitle(opf: Document) {
-        const titleElement =
-            opf.querySelector("metadata > dc\\:title") ||
-            opf.querySelector("metadata > title");
+        const titleElement = opf.querySelector("metadata > dc\\:title") || opf.querySelector("metadata > title");
         setTitle(titleElement?.textContent || "Untitled Book");
     }
 
     async function parseManifestAndSpine(opf: Document) {
         if (!currentZip.current) return;
 
-        const manifestItems: { [id: string]: { href: string; type: string } } =
-            {};
+        // 3. Updated Manifest extraction to include 'properties' (needed for EPUB 3 TOC)
+        const manifestItems: { [id: string]: { href: string; type: string; properties: string | null } } = {};
+        const hrefToId: { [href: string]: string } = {};
+
         opf.querySelectorAll("manifest > item").forEach((item) => {
             const id = item.getAttribute("id");
             const href = item.getAttribute("href");
             const type = item.getAttribute("media-type");
+            const properties = item.getAttribute("properties"); // Capture properties
             if (id && href && type) {
-                manifestItems[id] = { href: decodeURIComponent(href), type };
+                const decodedHref = decodeURIComponent(href);
+                manifestItems[id] = { href: decodedHref, type, properties };
+                hrefToId[decodedHref] = id;
             }
         });
 
-        const spineRefs = Array.from(
-            opf.querySelectorAll("spine > itemref"),
-        ).map((ref) => ref.getAttribute("idref"));
+        // --- TOC PARSING START ---
+        await parseTableOfContents(opf, manifestItems, hrefToId);
+        // --- TOC PARSING END ---
+
+        const spineRefs = Array.from(opf.querySelectorAll("spine > itemref")).map((ref) => ref.getAttribute("idref"));
 
         let combinedContent = "";
         const loadedCssHrefs = new Set<string>();
@@ -158,30 +137,29 @@ export default function useEpub() {
         for (const idref of spineRefs) {
             if (!idref) continue;
             const item = manifestItems[idref];
-            if (item) {
-                const itemFetchPath = currentObfFolder + item.href;
-                const itemFile = currentZip.current.file(itemFetchPath);
-                if (
-                    itemFile &&
-                    (item.type.includes("html") || item.type.includes("xml"))
-                ) {
-                    try {
+            if (item && (item.type.includes("html") || item.type.includes("xml"))) {
+                try {
+                    const itemFetchPath = currentObfFolder + item.href;
+                    const itemFile = currentZip.current.file(itemFetchPath);
+                    if (itemFile) {
                         const itemContent = await itemFile.async("text");
+                        
                         const processedContent = await processContentItem(
                             itemContent,
                             item.type,
+                            idref,
+                            item.href,
+                            hrefToId
                         );
-                        combinedContent += `<div class="bok-chapter">${processedContent}</div>`;
-                    } catch (e) {
-                        console.warn(
-                            `Failed to process spine item ${itemFetchPath}:`,
-                            e,
-                        );
+                        combinedContent += `<div class="bok-chapter" id="${idref}">${processedContent}</div>`;
                     }
+                } catch (e) {
+                    console.warn(`Failed to process spine item ${item.href}:`, e);
                 }
             }
         }
 
+        // Process CSS
         for (const id in manifestItems) {
             const item = manifestItems[id];
             if (item.type.includes("css")) {
@@ -189,13 +167,9 @@ export default function useEpub() {
                 if (!loadedCssHrefs.has(cssPath)) {
                     const cssFile = currentZip.current.file(cssPath);
                     if (cssFile) {
-                        try {
-                            currentStyle +=
-                                (await cssFile.async("text")) + "\n";
-                            loadedCssHrefs.add(cssPath);
-                        } catch (e) {
-                            console.warn(`Failed to load CSS ${cssPath}:`, e);
-                        }
+                        const rawCss = await cssFile.async("text");
+                        currentStyle += stripUnneededRules(rawCss) + "\n";
+                        loadedCssHrefs.add(cssPath);
                     }
                 }
             }
@@ -203,179 +177,244 @@ export default function useEpub() {
 
         addStyling();
         setRawContent(combinedContent);
+        setIsLoading(false);
+    }
+
+    async function parseTableOfContents(
+        opf: Document, 
+        manifestItems: { [id: string]: { href: string; type: string; properties: string | null } },
+        hrefToId: { [href: string]: string }
+    ) {
+        let tocId = null;
+        let tocItem = null;
+
+        // Try EPUB 3 (Navigation Document)
+        // Look for item with properties="nav"
+        const navItemKey = Object.keys(manifestItems).find(key => 
+            manifestItems[key].properties && manifestItems[key].properties?.includes("nav")
+        );
+        
+        if (navItemKey) {
+            tocItem = manifestItems[navItemKey];
+        } else {
+            // Try EPUB 2 (NCX)
+            const spine = opf.querySelector("spine");
+            tocId = spine?.getAttribute("toc");
+            if (tocId && manifestItems[tocId]) {
+                tocItem = manifestItems[tocId];
+            }
+        }
+
+        if (!tocItem || !currentZip.current) {
+            console.log("No TOC found.");
+            return;
+        }
+
+        const tocPath = currentObfFolder + tocItem.href;
+        const tocFile = currentZip.current.file(tocPath);
+        
+        if (!tocFile) return;
+
+        const tocContent = await tocFile.async("text");
+        const parser = new DOMParser();
+        const tocDoc = parser.parseFromString(tocContent, "application/xml"); // generic xml parsing works for html too usually
+
+        let parsedToc: TocItem[] = [];
+
+        if (tocItem.type.includes("ncx")) {
+            // EPUB 2 NCX Parser
+            const navPoints = Array.from(tocDoc.querySelectorAll("navMap > navPoint"));
+            
+            const parseNcxNodes = (nodes: Element[]): TocItem[] => {
+                return nodes.map(node => {
+                    const label = node.querySelector("navLabel > text")?.textContent || "Unnamed";
+                    const contentSrc = node.querySelector("content")?.getAttribute("src") || "";
+                    
+                    // Recursion
+                    const childNodes = Array.from(node.children).filter(c => c.tagName.toLowerCase() === "navpoint");
+                    
+                    return {
+                        label,
+                        href: resolveTocHref(contentSrc, tocItem!.href, hrefToId),
+                        subitems: parseNcxNodes(childNodes)
+                    };
+                });
+            };
+            parsedToc = parseNcxNodes(navPoints);
+
+        } else {
+            // EPUB 3 HTML Nav Parser
+            // Usually <nav epub:type="toc"> -> <ol> -> <li> -> <a>
+            const navRoot = tocDoc.querySelector("nav[epub\\:type='toc']") || tocDoc.querySelector("nav");
+            const ol = navRoot?.querySelector("ol");
+
+            const parseHtmlNodes = (list: Element | null): TocItem[] => {
+                if (!list) return [];
+                return Array.from(list.children).filter(c => c.tagName.toLowerCase() === "li").map(li => {
+                    const anchor = li.querySelector(":scope > a") || li.querySelector(":scope > span"); // Sometimes it's a span if not clickable
+                    const label = anchor?.textContent?.trim() || "Unnamed";
+                    const href = anchor?.getAttribute("href") || "";
+                    const childOl = li.querySelector(":scope > ol");
+
+                    return {
+                        label,
+                        href: resolveTocHref(href, tocItem!.href, hrefToId),
+                        subitems: parseHtmlNodes(childOl)
+                    };
+                });
+            };
+
+            if (ol) parsedToc = parseHtmlNodes(ol);
+        }
+
+        console.log("Parsed TOC:", parsedToc);
+        setToc(parsedToc);
+    }
+
+    // Helper to turn file paths into your internal #IDs
+    function resolveTocHref(rawHref: string, tocFileHref: string, hrefToId: { [href: string]: string }): string {
+        if (!rawHref) return "";
+        const [path, hash] = rawHref.split("#");
+        
+        // The TOC link is relative to the TOC file location, we need to make it relative to root to find the ID
+        const resolvedPath = resolvePath(tocFileHref, path);
+        
+        const targetId = hrefToId[resolvedPath];
+        if (!targetId) return ""; // Broken link or points to something not in manifest
+
+        return hash ? `#${targetId}_${hash}` : `#${targetId}`;
     }
 
     async function processContentItem(
         content: string,
         type: string,
+        currentId: string,
+        currentPath: string,
+        hrefToId: { [href: string]: string }
     ): Promise<string> {
-        // in some epubs the css is in the xhtml/file. sneaky fuckers
-        // we want to process it before giving it free reign
         let allCss = [...content.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
             .map((m) => m[1])
             .join("\n");
-
         allCss = stripUnneededRules(allCss);
-
         currentStyle += allCss;
-        // we don't need the style, link or title tags. furthermore, link tags would cause
-        // errors on the client because it wouldn't be able to find the files in the href.
+
         let processed = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
         processed = processed.replace(/<link[^>]*?>/gi, "");
         processed = processed.replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "");
-        processed = await cleanImages(processed, type);
+
+        processed = await manipulateDom(processed, type, currentId, currentPath, hrefToId);
+        
         return processed;
     }
 
-    function stripUnneededRules(allCss: string): string {
-        // linine css could easily fuck things up for us, we don't want that
-        const enemiesOfTheState = [
-            "background-color",
-            "color",
-            "font-size",
-            "font-family",
-            "font-weight",
-            "line-height",
-            "text-align",
-        ];
-
-        return allCss
-            .split(/}/)
-            .map((block: string) => {
-                const parts = block.split(/{/);
-                const selectors = parts[0];
-                const decls = parts[1];
-                if (!decls) return "";
-
-                const filtered = decls
-                    .split(/;/)
-                    .map((d: string) => d.trim())
-                    .filter((d: string) => {
-                        if (!d) return false;
-                        return !enemiesOfTheState.some(
-                            (prop) => new RegExp(`^${prop}s*:`, "i").test(d), // was RegExp(`^${prop}\s*:`, "i") before, eslint complained. write angry email to eslint if it causes any problems
-                        );
-                    })
-                    .join("; ");
-
-                return filtered ? `${selectors.trim()} { ${filtered}; }` : "";
-            })
-            .filter((rule: string) => Boolean(rule))
-            .join("\n");
-    }
-
-    // --- Image Logic with Error Handling ---
-
-    async function cleanImages(
-        document: string,
+    async function manipulateDom(
+        documentStr: string,
         type: string,
+        currentId: string,
+        currentPath: string,
+        hrefToId: { [href: string]: string }
     ): Promise<string> {
         const parser = new DOMParser();
+        const newDocument = parser.parseFromString(documentStr, type as DOMParserSupportedType);
 
-        if (validTypes.includes(type)) {
-            try {
-                // Error handling for DOM parsing/serialization
-                const newDocument = parser.parseFromString(
-                    document,
-                    type as DOMParserSupportedType,
-                );
-                const parserError = newDocument.querySelector("parsererror");
-                if (parserError) {
-                    // Error handling for malformed HTML/XML
-                    console.warn(
-                        "Parser error in content item during cleanImages, skipping.",
-                        parserError.textContent,
-                    );
-                    return document;
-                }
+        if (newDocument.querySelector("parsererror")) {
+            console.warn("Parser error in manipulateDom");
+            return documentStr;
+        }
 
-                const imgs = newDocument.querySelectorAll("img");
-                for (const img of imgs) {
-                    await formatImg(img);
-                }
-                const xmlImages = newDocument.querySelectorAll("image");
-                for (const image of xmlImages) {
-                    await formatXMLImage(image);
-                }
+        const allElementsWithId = newDocument.querySelectorAll("[id]");
+        for (const el of allElementsWithId) {
+            const oldId = el.getAttribute("id");
+            el.setAttribute("id", `${currentId}_${oldId}`);
+        }
 
-                const seri = new XMLSerializer();
-                const newDoc = seri.serializeToString(
-                    newDocument.documentElement || newDocument,
-                );
-                return newDoc;
-            } catch (error) {
-                console.error(
-                    "Error during cleanImages DOM processing:",
-                    error,
-                );
-                return document;
+        const allAnchors = newDocument.querySelectorAll("a[href]");
+        for (const anchor of allAnchors) {
+            const href = anchor.getAttribute("href");
+            if (!href || href.startsWith("http") || href.startsWith("mailto")) continue;
+
+            if (href.startsWith("#")) {
+                const targetId = href.substring(1);
+                anchor.setAttribute("href", `#${currentId}_${targetId}`);
+            } else {
+                const [targetPath, targetHash] = href.split("#");
+                const resolvedPath = resolvePath(currentPath, targetPath);
+                const targetChapterId = hrefToId[resolvedPath];
+
+                if (targetChapterId) {
+                    if (targetHash) {
+                        anchor.setAttribute("href", `#${targetChapterId}_${targetHash}`);
+                    } else {
+                        anchor.setAttribute("href", `#${targetChapterId}`);
+                    }
+                }
             }
-        } else return document;
+        }
+
+        const imgs = newDocument.querySelectorAll("img");
+        for (const img of imgs) await formatImg(img);
+        
+        const xmlImages = newDocument.querySelectorAll("image");
+        for (const image of xmlImages) await formatXMLImage(image);
+
+        const seri = new XMLSerializer();
+        return seri.serializeToString(newDocument.documentElement || newDocument);
     }
 
     async function formatImg(img: Element) {
-        let src = img.getAttribute("src") as string;
+        let src = img.getAttribute("src");
         if (!src) return;
-
         while (src.startsWith(".") || src.startsWith("/")) src = src.slice(1);
         src = currentObfFolder + src;
-
-        if (currentImages[src] === undefined) {
-            const imgFile = currentZip.current?.file(src); // Error handling: Check if file exists
-            if (imgFile) {
-                try {
-                    // Error handling for blob creation
-                    const blob = await imgFile.async("blob");
-                    const url = URL.createObjectURL(blob);
-                    currentImages[src] = url;
-                } catch (e) {
-                    console.warn(
-                        `Could not load image blob (formatImg) ${src}:`,
-                        e,
-                    );
-                    currentImages[src] = ""; // Cache failure on error
-                }
-            } else {
-                console.warn(`Image file not found in zip (formatImg): ${src}`);
-                currentImages[src] = ""; // Cache failure if file not found
-            }
-        }
-        img.setAttribute("src", currentImages[src]);
+        await resolveImageSrc(img, "src", src);
     }
 
     async function formatXMLImage(image: Element) {
-        let src = image.getAttribute("xlink:href") as string;
+        let src = image.getAttribute("xlink:href");
         if (!src) return;
-
         while (src.startsWith(".") || src.startsWith("/")) src = src.slice(1);
         src = currentObfFolder + src;
-
-        if (currentImages[src] === undefined) {
-            const imgFile = currentZip.current?.file(src); // Error handling: Check if file exists
-            if (imgFile) {
-                try {
-                    // Error handling for blob creation
-                    const blob = await imgFile.async("blob");
-                    const url = URL.createObjectURL(blob);
-                    currentImages[src] = url;
-                } catch (e) {
-                    console.warn(
-                        `Could not load image blob (formatXMLImage) ${src}:`,
-                        e,
-                    );
-                    currentImages[src] = ""; // Cache failure on error
-                }
-            } else {
-                console.warn(
-                    `Image file not found in zip (formatXMLImage): ${src}`,
-                );
-                currentImages[src] = ""; // Cache failure if file not found
-            }
-        }
-        image.setAttribute("xlink:href", currentImages[src]);
+        await resolveImageSrc(image, "xlink:href", src);
     }
 
-    // --- End of Image Logic ---
+    async function resolveImageSrc(element: Element, attribute: string, src: string) {
+        if (currentImages[src] === undefined) {
+            const imgFile = currentZip.current?.file(src);
+            if (imgFile) {
+                try {
+                    const blob = await imgFile.async("blob");
+                    currentImages[src] = URL.createObjectURL(blob);
+                } catch (e) {
+                    currentImages[src] = "";
+                }
+            } else {
+                currentImages[src] = "";
+            }
+        }
+        element.setAttribute(attribute, currentImages[src]);
+    }
+
+    function stripUnneededRules(allCss: string): string {
+        const enemiesOfTheState = [
+            "background-color", "color", "font-size", "font-family",
+            "font-weight", "line-height", "text-align", "margin", "padding"
+        ];
+
+        let css = allCss.replace(/\/\*[\s\S]*?\*\//g, "");
+        css = css.replace(/(^|[^.#\w-])(html|body)(?![\w-])/gi, "butt-sex-masterr");
+
+        for (const prop of enemiesOfTheState) {
+            const escaped = prop.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&');
+            const propRegex = new RegExp(`${escaped}(?:-[\\w-]+)?\\s*:[^;{}]*;?`, 'gi');
+            css = css.replace(propRegex, '');
+        }
+
+        css = css.replace(/[^{}@]+\{\s*\}/g, '');
+        css = css.replace(/@media[^{]*\{\s*\}/g, '');
+        css = css.replace(/\n\s*\n/g, '\n');
+
+        return css.trim();
+    }
 
     function addStyling() {
         if (!currentStyle.trim()) return;
@@ -388,12 +427,5 @@ export default function useEpub() {
         document.head.appendChild(styleLinkElement.current);
     }
 
-    return {
-        title,
-        rawContent,
-        isLoading,
-        error,
-        loadEpub,
-        setIsLoading,
-    };
+    return { title, rawContent, toc, isLoading, error, loadEpub, setIsLoading };
 }

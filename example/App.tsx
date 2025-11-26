@@ -4,7 +4,7 @@ import "../src/style.css";
 
 function App() {
     const epubUrl =
-        "https://43ru4bvzl6.ufs.sh/f/7NUfZePLME3PdJkelD5KMeOsb4QVJfmEhZqaTPv9XkdHLUgu";
+        "https://43ru4bvzl6.ufs.sh/f/7NUfZePLME3PgQtB04MPxfnWFmNkgCu0ea7hcsyqizdv86DK";
 
     const handleReaderTitleChange = useCallback((title: string) => {
         if (title && title !== "Loading...") {

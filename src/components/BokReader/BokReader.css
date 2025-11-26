@@ -18,6 +18,7 @@
     position: relative;
     overflow-y: hidden;
     overflow-x: hidden;
+    overscroll-behavior: none;
 
     font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
@@ -51,7 +52,7 @@
         -webkit-column-gap: calc(2 * var(--side-padding));
 
         overflow-x: hidden;
-        overscroll-behavior-x: none;
+        overscroll-behavior: none;
 
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
@@ -144,7 +145,6 @@
         pointer-events: none;
         font-variant-numeric: tabular-nums;
         
-        /* Updated to use variables */
         color: var(--page-num-text);
         background: var(--page-num-bg);
         border: 1px solid var(--page-num-border);

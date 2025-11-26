@@ -7,6 +7,9 @@ import OptionsMenu from "../OptionsMenu/OptionsMenu";
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
 import "./BokReader.css"
 
+import { calculatePageOfElement } from "../../helpful_functions/calculatePageOfElement";
+// Inside the component, add this effect:
+
 interface BokReaderProps {
     epubDataSource: File | ArrayBuffer | string | null;
     onTitleChange?: (title: string) => void;
@@ -43,6 +46,11 @@ const BokReader: React.FC<BokReaderProps> = ({
 
     const [tutorialShown, setTutorialShown] = usePersistentState<boolean>("bok_tutorial_shown", false);
     const [showTutorial, setShowTutorial] = useState(!tutorialShown);
+
+    // for debugging and testing in the console, will delete as soon as function is verified.
+    useEffect(() => {
+        (window as any).calculatePageOfElement = calculatePageOfElement;
+    }, []);
 
     useEffect(() => {
         if (tutorialShown) setShowTutorial(false);

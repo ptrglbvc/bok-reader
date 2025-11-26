@@ -242,6 +242,7 @@ export default function Book({
                 ref={bookRef}
                 dangerouslySetInnerHTML={{ __html: content }}
                 className="book-page"
+                id="bok-main-element"
             ></div>
             <PageNumber pages={pageCount} currentPage={currentPage} />
         </>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Settings } from "lucide-react";
 import useEpub from "../../hooks/useEpub";
 import usePersistentState from "../../hooks/usePersistentState"
 import Book, { BookHandle } from "../Book"; 
@@ -7,8 +8,6 @@ import OptionsMenu from "../OptionsMenu/OptionsMenu";
 import NavigationMenu from "../NavigationMenu/NavigationMenu"; 
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
 import "./BokReader.css"
-
-import { calculatePageOfElement } from "../../helpful_functions/calculatePageOfElement";
 
 interface BokReaderProps {
     epubDataSource: File | ArrayBuffer | string | null;
@@ -21,7 +20,7 @@ interface BokReaderProps {
     color?: string;
 }
 
-const BokReader: React.FC<BokReaderProps> = ({
+export const BokReader: React.FC<BokReaderProps> = ({
     epubDataSource,
     onTitleChange,
     onLoadingChange,
@@ -185,6 +184,14 @@ const BokReader: React.FC<BokReaderProps> = ({
                                 onClick={() => setActiveMenu('options')}
                                 aria-label="Open Settings"
                             />
+                            
+                            <div 
+                                className="settings-icon" 
+                                onClick={() => setActiveMenu('options')}
+                                aria-label="Open Settings"
+                            >
+                                <Settings size={16} />
+                            </div>
                         </div>
                     )}
                 </>

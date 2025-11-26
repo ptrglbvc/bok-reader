@@ -166,6 +166,10 @@
     fill: var(--accent-color);
 }
 
+.bottomIconWrapper svg path {
+    fill: var(--accent-color);
+}
+
 .bounceArrow {
     margin-top: 8px;
     animation: bounce 2s infinite;

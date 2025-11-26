@@ -15,13 +15,13 @@ export default defineConfig({
         libInjectCss(),
         dts({
             insertTypesEntry: true,
-            entryRoot: "lib",
+            entryRoot: "src",
             outDir: "dist",
         }),
     ],
     build: {
         lib: {
-            entry: resolve(__dirname, "lib/main.ts"),
+            entry: resolve(__dirname, "src/main.ts"),
             name: "Bok",
             formats: ["es", "umd"],
             fileName: (format) => `bok.${format}.js`,

@@ -1,4 +1,5 @@
 import React, { useState, CSSProperties } from "react";
+import { Settings, Menu } from "lucide-react";
 import styles from "./TutorialOverlay.module.css";
 
 interface TutorialOverlayProps {
@@ -52,20 +53,30 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             <div className={styles.centerZone}>
                 <div className={styles.bottomIconGroup}>
                     <div className={styles.bottomIconWrapper}>
-                        <svg viewBox="0 0 24 24">
-                            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-                        </svg>
+                        <Menu size={24} color={color} />
                     </div>
                     <div
                         className={styles.label}
                         style={{ fontSize: "0.9rem" }}
                     >
-                        Options
+                        Navigation
                     </div>
                     <div className={styles.bounceArrow}>
                         <svg width="24" height="24" viewBox="0 0 24 24">
                             <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
                         </svg>
+                    </div>
+                </div>
+
+                <div className={styles.bottomIconGroup} style={{ position: 'absolute', right: '40px', bottom: '80px' }}>
+                    <div className={styles.bottomIconWrapper}>
+                        <Settings size={20} color={color} />
+                    </div>
+                    <div
+                        className={styles.label}
+                        style={{ fontSize: "0.8rem" }}
+                    >
+                        Options
                     </div>
                 </div>
 

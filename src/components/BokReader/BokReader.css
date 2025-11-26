@@ -3,7 +3,7 @@
     --text-color: rgb(215, 215, 215);
     --page-num-text: rgba(255, 255, 255, 0.4);
     --page-num-bg: rgba(0, 0, 0, 0.3);
-    --page-num-border: transparent;
+    --page-num-border: rgba(255, 255, 255, 0.2);
 
     &.davinci {
         --bg-color: #dccba3;        
@@ -175,5 +175,21 @@
         height: 100%;
         background-color: transparent;
         cursor: pointer;
+    }
+
+    .settings-icon {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1001;
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+        color: var(--page-num-text);
+        
+        &:hover {
+            opacity: 0.8;
+        }
     }
 }

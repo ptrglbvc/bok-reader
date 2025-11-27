@@ -53,6 +53,39 @@ export const BokReader: React.FC<BokReaderProps> = ({
         if (tutorialShown) setShowTutorial(false);
     }, [tutorialShown]);
 
+    // --------------------------------------------------------
+    // Dynamic Theme Color for Notch Area/Status Bar
+    // (relevant mostly for when the book is fullscreen
+    // --------------------------------------------------------
+    useEffect(() => {
+        // We put this in a small timeout to ensure the CSS class has applied 
+        // and the browser has computed the new variable values.
+        const timer = setTimeout(() => {
+            if (bokReaderWrapperRef.current) {
+                const computedStyle = getComputedStyle(bokReaderWrapperRef.current);
+                const bgColor = computedStyle.getPropertyValue('--bg-color').trim();
+
+                // 2. Find or create the meta theme-color tag
+                let metaThemeColor = document.querySelector("meta[name='theme-color']");
+                if (!metaThemeColor) {
+                    metaThemeColor = document.createElement("meta");
+                    metaThemeColor.setAttribute("name", "theme-color");
+                    document.head.appendChild(metaThemeColor);
+                }
+
+                // 3. Set the content to the matched color
+                if (bgColor) {
+                    metaThemeColor.setAttribute("content", bgColor);
+                    
+                    // 4. Also set body background to match (helps with overscroll/notch gaps)
+                    document.body.style.backgroundColor = bgColor;
+                }
+            }
+        }, 50);
+
+        return () => clearTimeout(timer);
+    }, [colorScheme]);
+
     const dismissTutorial = () => {
         setShowTutorial(false);
         setTutorialShown(true);

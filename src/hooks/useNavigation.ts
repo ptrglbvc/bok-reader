@@ -60,10 +60,9 @@ const useNavigation = (
             if (longPressTimerRef.current && selectedText.current === "") {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;
-                // const { pageX, pageY } = event.touches[0]; // Note: changedPageX might be needed if touches is empty on end
-                // Correction for TouchEnd: event.touches is empty on end, use changedTouches
-                const touch = event.changedTouches[0];
-                handlePageClick(touch.pageX, touch.pageY);
+                const { pageX, pageY } = event.touches[0]; // Note: changedPageX might be needed if touches is empty on end
+                // const touch = event.changedTouches[0];
+                handlePageClick(pageX, pageY);
             }
         };
 

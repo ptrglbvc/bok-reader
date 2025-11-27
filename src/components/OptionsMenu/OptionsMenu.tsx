@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import toggleFullscreen from "../../helpful_functions/toggleFullscreen";
-
-import "./OptionsMenu.css";
+import styles from "./OptionsMenu.module.css";
 
 interface OptionsMenuProps {
     onClose: () => void;
@@ -47,98 +46,108 @@ function OptionsMenu({
         ...supportedColorschemes,
     ];
 
+    // Double rAF for smoother mount animation
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsVisible(true);
-        }, 0);
-        return () => clearTimeout(timer);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                setIsVisible(true);
+            });
+        });
     }, []);
 
-    const handleClose = () => {
-        setIsVisible(false);
-        setIsClosing(true);
-    };
+    const handleClose = useCallback(() => {
+        requestAnimationFrame(() => {
+            setIsVisible(false);
+            setIsClosing(true);
+        });
+        
+        // Match CSS transition duration (350ms)
+        setTimeout(onClose, 350);
+    }, [onClose]);
 
-    useEffect(() => {
-        if (isClosing) {
-            const timer = setTimeout(() => {
-                onClose();
-            }, 300); // Duration matches the CSS transition time
-            return () => clearTimeout(timer);
-        }
-    }, [isClosing, onClose]);
-
-    const handleOverlayClick = () => {
+    const handleOverlayClick = useCallback(() => {
         handleClose();
-    };
+    }, [handleClose]);
 
-    const handleMenuClick = (event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent click from propagating to the overlay
-    };
+    const handleMenuClick = useCallback((event: React.MouseEvent) => {
+        event.stopPropagation();
+    }, []);
 
-    const animateValue = (ref: React.RefObject<HTMLSpanElement | null>) => {
+    const animateValue = useCallback((ref: React.RefObject<HTMLSpanElement | null>) => {
         if (ref.current) {
-            ref.current.classList.add("value-changed");
+            ref.current.classList.add(styles['value-changed']);
             setTimeout(() => {
-                if (ref.current) {
-                    ref.current.classList.remove("value-changed");
-                }
-            }, 300); // Duration matches the CSS transition time
+                ref.current?.classList.remove(styles['value-changed']);
+            }, 200);
         }
-    };
+    }, []);
 
-    const handlePaddingIncrement = () => {
+    const handlePaddingIncrement = useCallback(() => {
         if (padding <= 70) {
             setPadding((prev) => prev + 5);
             animateValue(paddingValueRef);
         }
-    };
+    }, [padding, setPadding, animateValue]);
 
-    const handlePaddingDecrement = () => {
+    const handlePaddingDecrement = useCallback(() => {
         if (padding - 5 > 0) {
             setPadding((prev) => prev - 5);
             animateValue(paddingValueRef);
         }
-    };
+    }, [padding, setPadding, animateValue]);
 
-    const handleFontIncrement = () => {
+    const handleFontIncrement = useCallback(() => {
         if (fontSize < 3) {
             setFontSize((prev) => prev + 0.2);
             animateValue(fontValueRef);
         }
-    };
+    }, [fontSize, setFontSize, animateValue]);
 
-    const handleFontDecrement = () => {
+    const handleFontDecrement = useCallback(() => {
         if (fontSize - 0.2 > 0.6) {
             setFontSize((prev) => prev - 0.2);
             animateValue(fontValueRef);
         }
+    }, [fontSize, setFontSize, animateValue]);
+
+    const getMenuClassName = () => {
+        const classes = [styles['options-menu']];
+        if (isVisible) classes.push(styles['visible']);
+        if (isClosing) classes.push(styles['slide-down']);
+        return classes.join(' ');
+    };
+
+    const getOverlayClassName = () => {
+        const classes = [styles['options-menu-overlay']];
+        if (isClosing) classes.push(styles['fade-out']);
+        return classes.join(' ');
     };
 
     return (
         <div
-            className={`options-menu-overlay ${isClosing ? "fade-out" : ""}`}
+            className={getOverlayClassName()}
             onClick={handleOverlayClick}
         >
             <div
-                className={`options-menu ${isVisible ? "visible" : ""} ${
-                    isClosing ? "slide-down" : ""
-                }`}
+                className={getMenuClassName()}
                 onClick={handleMenuClick}
             >
                 <button
                     onClick={handleClose}
-                    className="close-button"
+                    className={styles['close-button']}
                     aria-label="Close menu"
                 >
                     ✕
                 </button>
-                <h2>Reader Options</h2>
-                <div className="options-buttons">
+                
+                <h2 className={styles['title']}>Reader Options</h2>
+                
+                <div className={styles['options-buttons']}>
                     {/* Font Family */}
-                    <div className="font-family-buttons">
-                        <div className="option-label">Font family</div>
+                    <div className={styles['option-row']}>
+                        <div className={styles['option-label']}>Font family</div>
                         <select
+                            className={styles['select']}
                             value={fontFamily}
                             onChange={(e) => {
                                 const selected = allFonts.find(
@@ -148,19 +157,18 @@ function OptionsMenu({
                             }}
                         >
                             {allFonts.map((font) => (
-                                <option
-                                    key={font.displayName}
-                                    value={font.name}
-                                >
+                                <option key={font.displayName} value={font.name}>
                                     {font.displayName}
                                 </option>
                             ))}
                         </select>
                     </div>
 
-                    <div className="font-family-buttons">
-                        <div className="option-label">Color Scheme</div>
+                    {/* Color Scheme */}
+                    <div className={styles['option-row']}>
+                        <div className={styles['option-label']}>Color Scheme</div>
                         <select
+                            className={styles['select']}
                             value={colorScheme}
                             onChange={(e) => {
                                 const selected = allColorSchemes.find(
@@ -169,57 +177,69 @@ function OptionsMenu({
                                 if (selected) setColorScheme(selected.name);
                             }}
                         >
-                            {allColorSchemes.map((font) => (
-                                <option
-                                    key={font.displayName}
-                                    value={font.name}
-                                >
-                                    {font.displayName}
+                            {allColorSchemes.map((scheme) => (
+                                <option key={scheme.displayName} value={scheme.name}>
+                                    {scheme.displayName}
                                 </option>
                             ))}
                         </select>
                     </div>
 
                     {/* Side Padding */}
-                    <div className="padding-buttons">
-                        <div className="option-label">Side padding</div>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                            }}
-                        >
-                            <button onClick={handlePaddingDecrement}>-</button>
-                            <span
-                                ref={paddingValueRef}
-                                className="option-value"
+                    <div className={styles['option-row']}>
+                        <div className={styles['option-label']}>Side padding</div>
+                        <div className={styles['option-controls']}>
+                            <button 
+                                className={styles['stepper-button']} 
+                                onClick={handlePaddingDecrement}
+                            >
+                                -
+                            </button>
+                            <span 
+                                ref={paddingValueRef} 
+                                className={styles['option-value']}
                             >
                                 {padding}
                             </span>
-                            <button onClick={handlePaddingIncrement}>+</button>
+                            <button 
+                                className={styles['stepper-button']} 
+                                onClick={handlePaddingIncrement}
+                            >
+                                +
+                            </button>
                         </div>
                     </div>
 
                     {/* Font Size */}
-                    <div className="font-buttons">
-                        <div className="option-label">Font size</div>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                            }}
-                        >
-                            <button onClick={handleFontDecrement}>-</button>
-                            <span ref={fontValueRef} className="option-value">
+                    <div className={styles['option-row']}>
+                        <div className={styles['option-label']}>Font size</div>
+                        <div className={styles['option-controls']}>
+                            <button 
+                                className={styles['stepper-button']} 
+                                onClick={handleFontDecrement}
+                            >
+                                -
+                            </button>
+                            <span 
+                                ref={fontValueRef} 
+                                className={styles['option-value']}
+                            >
                                 {Math.round(fontSize * 10)}
                             </span>
-                            <button onClick={handleFontIncrement}>+</button>
+                            <button 
+                                className={styles['stepper-button']} 
+                                onClick={handleFontIncrement}
+                            >
+                                +
+                            </button>
                         </div>
                     </div>
 
-                    <button onClick={toggleFullscreen}>
+                    {/* Fullscreen Toggle */}
+                    <button 
+                        className={styles['fullscreen-button']} 
+                        onClick={toggleFullscreen}
+                    >
                         Toggle fullscreen
                     </button>
                 </div>

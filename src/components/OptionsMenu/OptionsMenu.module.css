@@ -4,26 +4,35 @@
     left: 0;
     width: 100%;
     height: 100%;
-    backdrop-filter: blur(4px);
     background-color: rgba(0, 0, 0, 0.6);
     z-index: 9999;
-    opacity: 1;
     container-type: size;
     container-name: options-overlay;
-    transition: opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1), backdrop-filter 0.4s ease;
     overflow: hidden;
+    
+    /* GPU acceleration */
+    will-change: opacity;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    
+    /* Static blur - animate only opacity for the sweet sweet gpu acceleration*/
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    
+    opacity: 1;
+    transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .options-menu-overlay.fade-out {
     opacity: 0;
-    backdrop-filter: blur(0px);
 }
 
 .options-menu {
     position: absolute;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%) translateY(120%);
+    
     width: calc(100% - 40px);
     max-width: 400px;
     background: rgba(30, 30, 30, 0.95);
@@ -36,36 +45,53 @@
     color: #fff;
     max-height: 80%;
     overflow-y: auto;
-    
-    transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    
+    /* GPU acceleration */
+    will-change: transform, opacity;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateX(-50%) translateY(120%) translateZ(0);
+    transform: translateX(-50%) translateY(120%) translateZ(0);
+    
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+                opacity 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    
+    opacity: 0;
 }
 
 .options-menu.visible {
-    transform: translateX(-50%) translateY(0);
+    -webkit-transform: translateX(-50%) translateY(0) translateZ(0);
+    transform: translateX(-50%) translateY(0) translateZ(0);
+    opacity: 1;
 }
 
 .options-menu.slide-down {
-    transform: translateX(-50%) translateY(120%);
+    -webkit-transform: translateX(-50%) translateY(120%) translateZ(0);
+    transform: translateX(-50%) translateY(120%) translateZ(0);
+    opacity: 0;
 }
 
 @media (min-width: 768px) {
     .options-menu {
         left: auto;
         right: 20px;  
-        transform: translateY(120%); 
+        -webkit-transform: translateY(120%) translateZ(0);
+        transform: translateY(120%) translateZ(0);
     }
 
     .options-menu.visible {
-        transform: translateY(0);
+        -webkit-transform: translateY(0) translateZ(0);
+        transform: translateY(0) translateZ(0);
     }
 
     .options-menu.slide-down {
-        transform: translateY(120%);
+        -webkit-transform: translateY(120%) translateZ(0);
+        transform: translateY(120%) translateZ(0);
     }
 }
 
-.options-menu h2 {
+.title {
     margin: 0 0 24px 0;
     font-size: 1.25rem;
     font-weight: 600;
@@ -89,13 +115,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    
+    /* GPU accelerated rotation */
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .close-button:hover {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
-    transform: rotate(90deg);
+    transform: rotate(90deg) translateZ(0);
 }
 
 .options-buttons {
@@ -104,12 +135,9 @@
     gap: 16px;
 }
 
-/* Common row style */
-.font-family-buttons,
-.padding-buttons,
-.font-buttons {
+.option-row {
     display: flex;
-    flex-direction: row; /* Align naturally */
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
     background: rgba(0, 0, 0, 0.3);
@@ -119,19 +147,21 @@
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Reorder flex items locally if needed to match original logic, 
-   but visually it's better to have Label -> Controls */
-
 .option-label {
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.7);
     font-weight: 500;
-    margin-right: auto; /* Push label to the left */
+    margin-right: auto;
     padding-left: 4px;
 }
 
-/* Shared button styles */
-.options-buttons button:not(.close-button) {
+.option-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stepper-button {
     height: 36px;
     min-width: 36px;
     padding: 0 12px;
@@ -141,32 +171,47 @@
     border-radius: 10px;
     color: #fff;
     cursor: pointer;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 500;
+    
+    /* GPU acceleration */
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    transition: transform 0.1s ease, background-color 0.15s ease;
 }
 
-.options-buttons button:not(.close-button):hover {
+.stepper-button:active {
+    transform: scale(0.92) translateZ(0);
     background-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
 }
 
-.options-buttons button:not(.close-button):active {
-    transform: translateY(1px);
+.option-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+    display: inline-block;
+    color: #fff;
+    
+    /* GPU accelerated scale animation */
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                color 0.2s ease;
 }
 
-/* Fullscreen toggle specific */
-.options-buttons > button:last-child {
-    width: 100%;
-    margin-top: 8px;
-    background-color: rgba(255, 255, 255, 0.08);
-    height: 44px;
+.option-value.value-changed {
+    transform: scale(1.3) translateZ(0);
+    color: #4facfe;
 }
 
-/* Select styling */
-.font-family-buttons select {
+.select {
     height: 36px;
     border-radius: 10px;
     background-color: rgba(255, 255, 255, 0.1);
@@ -177,7 +222,7 @@
     cursor: pointer;
     appearance: none;
     font-size: 0.9rem;
-    transition: background 0.2s;
+    transition: background 0.15s ease;
     
     /* Custom dropdown arrow */
     background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
@@ -186,47 +231,53 @@
     background-size: 10px auto;
 }
 
-.font-family-buttons select:hover {
+.select:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.select:active {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-.option-value {
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-    min-width: 24px;
-    text-align: center;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s;
-    display: inline-block;
+/* Fullscreen button */
+.fullscreen-button {
+    width: 100%;
+    height: 44px;
+    margin-top: 8px;
+    padding: 0 12px;
+    font-size: 14px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
     color: #fff;
-}
-
-.option-value.value-changed {
-    transform: scale(1.3);
-    color: #4facfe; /* A nice blue accent pulse */
-}
-
-/* Specific adjustments to button containers */
-.padding-buttons,
-.font-buttons {
-    /* Ensure controls are grouped on the right */
-    justify-content: space-between;
-}
-
-.padding-buttons > div,
-.font-buttons > div {
-    /* This targets the wrapper of buttons/values if any */
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    font-weight: 500;
+    
+    /* GPU acceleration */
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    transition: transform 0.1s ease, background-color 0.15s ease;
 }
 
-/* Custom scrollbar for the menu */
+.fullscreen-button:active {
+    transform: scale(0.98) translateZ(0);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Custom scrollbar */
 .options-menu::-webkit-scrollbar {
     width: 6px;
 }
+
 .options-menu::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .options-menu::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 20px;

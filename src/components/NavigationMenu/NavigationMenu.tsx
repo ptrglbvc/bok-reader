@@ -149,6 +149,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
                             value={inputPage}
                             onChange={(e) => setInputPage(parseInt(e.target.value) || 1)}
                             onKeyDown={(e) => e.key === 'Enter' && handleJump()}
+                            onClick={(e) => e.currentTarget.select()}
                         />
                         <span className={styles['total-pages']}>of {totalPages}</span>
                         <button className={styles['go-btn']} onClick={handleJump}>Go</button>

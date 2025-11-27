@@ -208,7 +208,7 @@
     .settings-icon {
         position: absolute;
         bottom: 20px;
-        right: 20px;
+        right: 25px;
         font-size: 14px;
         cursor: pointer;
         z-index: 1001;

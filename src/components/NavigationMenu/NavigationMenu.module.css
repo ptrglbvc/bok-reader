@@ -184,6 +184,11 @@
     -moz-appearance: textfield;
 }
 
+.jumper-input:focus {
+    outline: none;
+    border-color: var(--color-tint);
+}
+
 .jumper-input::-webkit-outer-spin-button,
 .jumper-input::-webkit-inner-spin-button {
     -webkit-appearance: none;

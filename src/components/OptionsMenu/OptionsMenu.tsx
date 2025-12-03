@@ -235,13 +235,15 @@ function OptionsMenu({
                         </div>
                     </div>
 
-                    {/* Fullscreen Toggle */}
+                    {/* iOS doesn't support this api and you will get a nasty client side exception if you dont do this*/}
+                    { document.documentElement.requestFullscreen ? 
                     <button 
                         className={styles['fullscreen-button']} 
                         onClick={toggleFullscreen}
                     >
                         Toggle fullscreen
                     </button>
+                    : <></>}
                 </div>
             </div>
         </div>

@@ -18,7 +18,6 @@ export default function LoadingScreen({
     const spinnerStyle: CustomCSS = {
         "--loader-color": color || "red",
     };
-
     return (
         <div
             className={

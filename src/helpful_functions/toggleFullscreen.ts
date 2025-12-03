@@ -1,7 +1,9 @@
-export default function toggleFullScreen() {
-  if (!document.fullscreenElement) {
+export default function toggleFullscreen() {
+  if (document.documentElement.requestFullscreen) {
+    if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen();
-  } else if (document.exitFullscreen) {
+    } else if (document.exitFullscreen) {
     document.exitFullscreen();
+    }
   }
 }

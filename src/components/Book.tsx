@@ -15,7 +15,6 @@ import useNavigation from "../hooks/useNavigation";
 import PageNumber from "./PageNumber";
 import { calculatePageOfElement } from "../helpful_functions/calculatePageOfElement";
 
-// 1. Define Handle
 export interface BookHandle {
     goToPage: (page: number) => void;
     findAndJumpToHref: (href: string) => void;
@@ -31,7 +30,6 @@ interface PageProps {
     showTutorial: boolean;
     isOptionMenuVisible: boolean;
     containerElementRef: React.RefObject<HTMLDivElement | null>;
-    // 2. Add callbacks
     onPageChange?: (page: number) => void;
     onPageCountChange?: (count: number) => void;
 }
@@ -71,12 +69,10 @@ const Book = forwardRef<BookHandle, PageProps>(({
     const percentReadRef = useRef(percentRead);
     const animationRef = useRef<number | null>(null);
 
-    // Sync Page Count up
     useEffect(() => {
         if(onPageCountChange) onPageCountChange(pageCount);
     }, [pageCount, onPageCountChange]);
 
-    // Sync Current Page up
     useEffect(() => {
         if(onPageChange) onPageChange(currentPage);
     }, [currentPage, onPageChange]);

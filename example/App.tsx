@@ -4,7 +4,7 @@ import "../src/style.css";
 
 function App() {
     const epubUrl =
-        "https://43ru4bvzl6.ufs.sh/f/7NUfZePLME3P0yZykYPyrQntJlfpVY1OwMghH2coN6qbIek7";
+        "https://43ru4bvzl6.ufs.sh/f/7NUfZePLME3PYgjEwQBi3BkLgUlt1zNSyxXcsbWCT2RK0Iv8";
 
     const handleReaderTitleChange = useCallback((title: string) => {
         if (title && title !== "Loading...") {
@@ -22,8 +22,7 @@ function App() {
     const handleReaderLoading = useCallback((_isLoading: boolean) => {}, []);
 
     const supportedFonts = [
-        { name: "Inter", displayName: "Inter" },
-        { name: "Roboto", displayName: "Roboto" },
+        { name: "Roboto Condensed", displayName: "Roboto Condensed" },
         { name: "Merriweather", displayName: "Merriweather" },
     ];
 

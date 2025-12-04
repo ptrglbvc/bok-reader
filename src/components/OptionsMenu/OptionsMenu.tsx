@@ -36,8 +36,10 @@ function OptionsMenu({
     const paddingValueRef = useRef<HTMLSpanElement>(null);
 
     const allFonts = [
-        { displayName: "System Default", name: "system-ui" },
+        { displayName: "Literata", name: "Literata" },
+        { displayName: "Cormorant", name: "Cormorant Garamond" },
         ...supportedFonts,
+        { displayName: "System Default", name: "system-ui" },
     ];
 
     const allColorSchemes = [
@@ -234,9 +236,8 @@ function OptionsMenu({
                             </button>
                         </div>
                     </div>
-
                     {/* iOS doesn't support this api and you will get a nasty client side exception if you dont do this*/}
-                    { document.documentElement.requestFullscreen ? 
+                    { 'requestFullscreen' in document.documentElement ?  
                     <button 
                         className={styles['fullscreen-button']} 
                         onClick={toggleFullscreen}

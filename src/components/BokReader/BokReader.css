@@ -1,3 +1,58 @@
+@font-face {
+    font-family: "Cormorant Garamond";
+    font-style: italic;
+    font-weight: 300 900;
+    src: url("../../assets/fonts/garamond/CormorantGaramond-Italic-VariableFont_wght.woff2");
+}
+
+@font-face {
+    font-family: "Cormorant Garamond";
+    font-style: normal;
+    font-weight: 300 900;
+    src: url("../../assets/fonts/garamond/CormorantGaramond-VariableFont_wght.woff2");
+}
+
+@font-face {
+    font-family: "Roboto Condensed";
+    font-style: italic;
+    src: url("../../assets/fonts/roboto/RobotoCondensed-Italic-VariableFont_wght.woff2");
+}
+
+@font-face {
+    font-family: "Roboto Condensed";
+    font-style: normal;
+    src: url("../../assets/fonts/roboto/RobotoCondensed-VariableFont_wght.woff2");
+}
+
+@font-face {
+    font-family: "Literata";
+    font-style: normal;
+    font-weight: 400;
+    src: url("../../assets/fonts/literata/Literata-Regular.woff2");
+}
+
+@font-face {
+    font-family: "Literata";
+    font-style: italic;
+    font-weight: 400;
+    src: url("../../assets/fonts/literata/Literata-Italic.woff2");
+}
+
+@font-face {
+    font-family: "Literata";
+    font-style: normal;
+    font-weight: 700;
+    src: url("../../assets/fonts/literata/Literata-Bold.woff2");
+}
+
+@font-face {
+    font-family: "Literata";
+    font-style: italic;
+    font-weight: 700;
+    src: url("../../assets/fonts/literata/Literata-BoldItalic.woff2");
+}
+
+
 .bok-reader-container {
     --bg-color: black;
     --text-color: rgb(215, 215, 215);
@@ -41,7 +96,7 @@
 
     .book-page {
         margin: 0;
-        font-family: var(--font-family);
+        font-family: var(--font-family), "Cormorant Garamond", Geordia,  Times New Roman;
 
         /* env keepts the main content out of trouble when the book is in fullscreen mode.*/
         padding-top: calc(var(--top-padding) + env(safe-area-inset-top));

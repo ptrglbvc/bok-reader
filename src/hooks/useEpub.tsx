@@ -24,7 +24,7 @@ function resolvePath(base: string, relative: string) {
 
 export default function useEpub() {
     const [rawContent, setRawContent] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [title, setTitle] = useState("");
     const [toc, setToc] = useState<TocItem[]>([]); // 2. State for TOC
     const [error, setError] = useState<string | null>(null);
@@ -143,7 +143,7 @@ export default function useEpub() {
                     const itemFile = currentZip.current.file(itemFetchPath);
                     if (itemFile) {
                         const itemContent = await itemFile.async("text");
-                        
+
                         const processedContent = await processContentItem(
                             itemContent,
                             item.type,
@@ -181,7 +181,7 @@ export default function useEpub() {
     }
 
     async function parseTableOfContents(
-        opf: Document, 
+        opf: Document,
         manifestItems: { [id: string]: { href: string; type: string; properties: string | null } },
         hrefToId: { [href: string]: string }
     ) {
@@ -190,10 +190,10 @@ export default function useEpub() {
 
         // Try EPUB 3 (Navigation Document)
         // Look for item with properties="nav"
-        const navItemKey = Object.keys(manifestItems).find(key => 
+        const navItemKey = Object.keys(manifestItems).find(key =>
             manifestItems[key].properties && manifestItems[key].properties?.includes("nav")
         );
-        
+
         if (navItemKey) {
             tocItem = manifestItems[navItemKey];
         } else {
@@ -212,7 +212,7 @@ export default function useEpub() {
 
         const tocPath = currentObfFolder + tocItem.href;
         const tocFile = currentZip.current.file(tocPath);
-        
+
         if (!tocFile) return;
 
         const tocContent = await tocFile.async("text");
@@ -224,15 +224,15 @@ export default function useEpub() {
         if (tocItem.type.includes("ncx")) {
             // EPUB 2 NCX Parser
             const navPoints = Array.from(tocDoc.querySelectorAll("navMap > navPoint"));
-            
+
             const parseNcxNodes = (nodes: Element[]): TocItem[] => {
                 return nodes.map(node => {
                     const label = node.querySelector("navLabel > text")?.textContent || "Unnamed";
                     const contentSrc = node.querySelector("content")?.getAttribute("src") || "";
-                    
+
                     // Recursion
                     const childNodes = Array.from(node.children).filter(c => c.tagName.toLowerCase() === "navpoint");
-                    
+
                     return {
                         label,
                         href: resolveTocHref(contentSrc, tocItem!.href, hrefToId),
@@ -275,10 +275,10 @@ export default function useEpub() {
     function resolveTocHref(rawHref: string, tocFileHref: string, hrefToId: { [href: string]: string }): string {
         if (!rawHref) return "";
         const [path, hash] = rawHref.split("#");
-        
+
         // The TOC link is relative to the TOC file location, we need to make it relative to root to find the ID
         const resolvedPath = resolvePath(tocFileHref, path);
-        
+
         const targetId = hrefToId[resolvedPath];
         if (!targetId) return ""; // Broken link or points to something not in manifest
 
@@ -303,7 +303,7 @@ export default function useEpub() {
         processed = processed.replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "");
 
         processed = await manipulateDom(processed, type, currentId, currentPath, hrefToId);
-        
+
         return processed;
     }
 
@@ -353,7 +353,7 @@ export default function useEpub() {
 
         const imgs = newDocument.querySelectorAll("img");
         for (const img of imgs) await formatImg(img);
-        
+
         const xmlImages = newDocument.querySelectorAll("image");
         for (const image of xmlImages) await formatXMLImage(image);
 

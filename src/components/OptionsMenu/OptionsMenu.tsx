@@ -1,19 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import toggleFullscreen from "../../helpful_functions/toggleFullscreen";
 import styles from "./OptionsMenu.module.css";
+import { Theme } from "../BokReader/BokReader.tsx";
 
 interface OptionsMenuProps {
     onClose: () => void;
     fontSize: number;
     padding: number;
     fontFamily: string;
-    colorScheme: string;
+    theme: string;
     setFontSize: React.Dispatch<React.SetStateAction<number>>;
     setPadding: React.Dispatch<React.SetStateAction<number>>;
     setFontFamily: React.Dispatch<React.SetStateAction<string>>;
-    setColorScheme: React.Dispatch<React.SetStateAction<string>>;
+    setTheme: React.Dispatch<React.SetStateAction<string>>;
     supportedFonts: { displayName: string; name: string }[];
-    supportedColorschemes: { displayName: string; name: string }[];
+    allThemes: { [key: string]: Theme }
 }
 
 function OptionsMenu({
@@ -21,13 +22,13 @@ function OptionsMenu({
     fontSize,
     padding,
     fontFamily,
-    colorScheme,
+    theme,
     setFontSize,
     setPadding,
-    setColorScheme,
+    setTheme,
     setFontFamily,
     supportedFonts = [],
-    supportedColorschemes = []
+    allThemes
 }: OptionsMenuProps) {
     const [isClosing, setIsClosing] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
@@ -43,11 +44,7 @@ function OptionsMenu({
         { displayName: "System Default", name: "system-ui" },
     ];
 
-    const allColorSchemes = [
-        { displayName: "Amoled Dark", name: "amoled" },
-        { displayName: "Da Vinci", name: "davinci" },
-        ...supportedColorschemes,
-    ];
+    const allThemesArray = Object.keys(allThemes)
 
     // Double rAF for smoother mount animation
     useEffect(() => {
@@ -63,7 +60,7 @@ function OptionsMenu({
             setIsVisible(false);
             setIsClosing(true);
         });
-        
+
         // Match CSS transition duration (350ms)
         setTimeout(onClose, 350);
     }, [onClose]);
@@ -142,9 +139,9 @@ function OptionsMenu({
                 >
                     ✕
                 </button>
-                
+
                 <h2 className={styles['title']}>Reader Options</h2>
-                
+
                 <div className={styles['options-buttons']}>
                     {/* Font Family */}
                     <div className={styles['option-row']}>
@@ -172,17 +169,17 @@ function OptionsMenu({
                         <div className={styles['option-label']}>Color Scheme</div>
                         <select
                             className={styles['select']}
-                            value={colorScheme}
+                            value={theme}
                             onChange={(e) => {
-                                const selected = allColorSchemes.find(
-                                    (f) => f.name === e.target.value,
+                                const selected = allThemesArray.find(
+                                    (f) => f === e.target.value,
                                 );
-                                if (selected) setColorScheme(selected.name);
+                                if (selected) setTheme(selected);
                             }}
                         >
-                            {allColorSchemes.map((scheme) => (
-                                <option key={scheme.displayName} value={scheme.name}>
-                                    {scheme.displayName}
+                            {allThemesArray.map((theme) => (
+                                <option key={theme} value={theme}>
+                                    {theme}
                                 </option>
                             ))}
                         </select>
@@ -192,20 +189,20 @@ function OptionsMenu({
                     <div className={styles['option-row']}>
                         <div className={styles['option-label']}>Side padding</div>
                         <div className={styles['option-controls']}>
-                            <button 
-                                className={styles['stepper-button']} 
+                            <button
+                                className={styles['stepper-button']}
                                 onClick={handlePaddingDecrement}
                             >
                                 -
                             </button>
-                            <span 
-                                ref={paddingValueRef} 
+                            <span
+                                ref={paddingValueRef}
                                 className={styles['option-value']}
                             >
                                 {padding}
                             </span>
-                            <button 
-                                className={styles['stepper-button']} 
+                            <button
+                                className={styles['stepper-button']}
                                 onClick={handlePaddingIncrement}
                             >
                                 +
@@ -217,20 +214,20 @@ function OptionsMenu({
                     <div className={styles['option-row']}>
                         <div className={styles['option-label']}>Font size</div>
                         <div className={styles['option-controls']}>
-                            <button 
-                                className={styles['stepper-button']} 
+                            <button
+                                className={styles['stepper-button']}
                                 onClick={handleFontDecrement}
                             >
                                 -
                             </button>
-                            <span 
-                                ref={fontValueRef} 
+                            <span
+                                ref={fontValueRef}
                                 className={styles['option-value']}
                             >
                                 {Math.round(fontSize * 10)}
                             </span>
-                            <button 
-                                className={styles['stepper-button']} 
+                            <button
+                                className={styles['stepper-button']}
                                 onClick={handleFontIncrement}
                             >
                                 +
@@ -238,14 +235,14 @@ function OptionsMenu({
                         </div>
                     </div>
                     {/* iOS doesn't support this api and you will get a nasty client side exception if you dont do this*/}
-                    { 'requestFullscreen' in document.documentElement ?  
-                    <button 
-                        className={styles['fullscreen-button']} 
-                        onClick={toggleFullscreen}
-                    >
-                        Toggle fullscreen
-                    </button>
-                    : <></>}
+                    {'requestFullscreen' in document.documentElement ?
+                        <button
+                            className={styles['fullscreen-button']}
+                            onClick={toggleFullscreen}
+                        >
+                            Toggle fullscreen
+                        </button>
+                        : <></>}
                 </div>
             </div>
         </div>

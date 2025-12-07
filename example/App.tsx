@@ -19,12 +19,23 @@ function App() {
         alert(`Error loading book: ${errorMsg}\nPlease try a different file.`);
     }, []);
 
-    const handleReaderLoading = useCallback((_isLoading: boolean) => {}, []);
+    const handleReaderLoading = useCallback(() => { }, []);
 
     const supportedFonts = [
         { name: "Roboto Condensed", displayName: "Roboto Condensed" },
         { name: "Merriweather", displayName: "Merriweather" },
     ];
+    const themes = {
+        "Cyberpunk": {
+            "--bg-color": "#050505",
+            "--text-color": "#00ff9f",
+            "--page-num-text": "#ff003c",
+            "--page-num-bg": "rgba(0, 20, 10, 0.8)",
+            "--page-num-border": "#00ff9f",
+            "--color-tint": "#00ff9f"
+        }
+    }
+
 
     return (
         <>
@@ -41,7 +52,7 @@ function App() {
                     onError={handleReaderError}
                     onLoadingChange={handleReaderLoading}
                     supportedFonts={supportedFonts}
-                    color={"#c9f"}
+                    themes={themes}
                 />
             </div>
         </>

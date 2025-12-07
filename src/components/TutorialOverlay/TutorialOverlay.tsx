@@ -1,19 +1,12 @@
-import React, { useState, CSSProperties } from "react";
+import React, { useState } from "react";
 import { Settings, Menu } from "lucide-react";
 import styles from "./TutorialOverlay.module.css";
 
 interface TutorialOverlayProps {
-    color?: string;
     onDismiss: () => void;
 }
 
-// Extending CSSProperties to allow custom variables in TypeScript
-interface CustomCSS extends CSSProperties {
-    "--accent-color"?: string;
-}
-
 const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
-    color = "#4fc3f7",
     onDismiss,
 }) => {
     const [isFading, setIsFading] = useState(false);
@@ -27,7 +20,6 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         <div
             className={`${styles.overlay} ${isFading ? styles.fadeOut : ""}`}
             onClick={handleDismiss}
-            style={{ "--accent-color": color } as CustomCSS}
         >
             {/* Left Zone */}
             <div className={styles.interactionZone}>
@@ -53,7 +45,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             <div className={styles.centerZone}>
                 <div className={styles.bottomIconGroup}>
                     <div className={styles.bottomIconWrapper}>
-                        <Menu size={24} color={color} />
+                        <Menu size={24} />
                     </div>
                     <div
                         className={styles.label}
@@ -70,7 +62,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
                 <div className={styles.bottomIconGroup} style={{ position: 'absolute', right: '40px', bottom: '80px' }}>
                     <div className={styles.bottomIconWrapper}>
-                        <Settings size={20} color={color} />
+                        <Settings size={20} />
                     </div>
                     <div
                         className={styles.label}

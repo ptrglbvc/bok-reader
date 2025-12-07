@@ -54,20 +54,6 @@
 
 
 .bok-reader-container {
-    --bg-color: black;
-    --text-color: rgb(215, 215, 215);
-    --page-num-text: rgba(255, 255, 255, 0.4);
-    --page-num-bg: rgba(0, 0, 0, 0.3);
-    --page-num-border: rgba(255, 255, 255, 0.2);
-
-    &.davinci {
-        --bg-color: #dccba3;        
-        --text-color: #463425;     
-        --page-num-text: #2b1f15;
-        --page-num-bg: rgba(70, 52, 37, 0.1);
-        --page-num-border: rgba(70, 52, 37, 0.2);
-    }
-
     width: 100%;
     height: 100%;
     position: relative;
@@ -80,14 +66,18 @@
     font-weight: 400;
     text-align: justify;
     color-scheme: dark light;
-    
+
     color: var(--text-color) !important;
     background-color: var(--bg-color);
 
     overflow: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
-      &::-webkit-scrollbar { display: none; }
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -96,7 +86,7 @@
 
     .book-page {
         margin: 0;
-        font-family: var(--font-family), "Cormorant Garamond", Geordia,  Times New Roman;
+        font-family: var(--font-family), "Cormorant Garamond", Geordia, Times New Roman;
 
         /* env keepts the main content out of trouble when the book is in fullscreen mode.*/
         padding-top: calc(var(--top-padding) + env(safe-area-inset-top));
@@ -121,15 +111,16 @@
 
         scrollbar-width: none;
         -ms-overflow-style: none;
-          &::-webkit-scrollbar {
-            display: none;
-          }
 
-          > * {
-              break-inside: avoid-column;
-              page-break-inside: avoid;
-              -webkit-column-break-inside: avoid;
-          }
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        >* {
+            break-inside: avoid-column;
+            page-break-inside: avoid;
+            -webkit-column-break-inside: avoid;
+        }
     }
 
     @container (aspect-ratio > 1/1) {
@@ -140,14 +131,15 @@
             column-width: calc(50% - var(--side-padding));
             -webkit-column-width: calc(50% - var(--side-padding));
 
-            img, svg {
+            img,
+            svg {
                 max-width: calc(100% - 2 * var(--side-padding)) !important;
                 margin-bottom: 10px;
             }
         }
     }
 
-    @container (aspect-ratio <= 1/1) {
+    @container (aspect-ratio <=1/1) {
         .book-page {
             column-count: 1;
             -moz-column-count: 1;
@@ -159,7 +151,8 @@
             width: 100%;
             box-sizing: border-box;
 
-            img, svg {
+            img,
+            svg {
                 max-width: calc(100% - 2 * var(--side-padding)) !important;
                 margin-bottom: 10px;
             }
@@ -186,16 +179,16 @@
         -webkit-column-break-inside: avoid;
     }
 
-    .book-page svg > image {
+    .book-page svg>image {
         width: 100%;
         height: 100%;
     }
 
     .bok-chapter {
-      margin-bottom: 100%;
-       break-inside: avoid-column;
-       page-break-inside: avoid;
-       -webkit-column-break-inside: avoid;
+        margin-bottom: 100%;
+        break-inside: avoid-column;
+        page-break-inside: avoid;
+        -webkit-column-break-inside: avoid;
     }
 
     .bok-chapter h1,
@@ -226,7 +219,9 @@
         margin-top: 1.6em;
     }
 
-    parsererror { display: none; }
+    parsererror {
+        display: none;
+    }
 
     .page-number {
         position: absolute;
@@ -239,11 +234,11 @@
         z-index: 10;
         pointer-events: none;
         font-variant-numeric: tabular-nums;
-        
+
         color: var(--page-num-text);
         background: var(--page-num-bg);
         border: 1px solid var(--page-num-border);
-        
+
         padding: 4px 10px;
         border-radius: 12px;
         backdrop-filter: blur(2px);
@@ -254,7 +249,7 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 15%; 
+        height: 15%;
         z-index: 1000;
         display: flex;
     }
@@ -276,7 +271,7 @@
         opacity: 0.5;
         transition: opacity 0.2s ease;
         color: var(--page-num-text);
-        
+
         &:hover {
             opacity: 0.8;
         }

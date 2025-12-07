@@ -2,12 +2,21 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Settings } from "lucide-react";
 import useEpub from "../../hooks/useEpub";
 import usePersistentState from "../../hooks/usePersistentState"
-import Book, { BookHandle } from "../Book"; 
+import Book, { BookHandle } from "../Book";
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
-import NavigationMenu from "../NavigationMenu/NavigationMenu"; 
+import NavigationMenu from "../NavigationMenu/NavigationMenu";
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
 import "./BokReader.css"
+
+export interface Theme {
+    "--bg-color": string,
+    "--text-color": string,
+    "--page-num-text": string,
+    "--page-num-bg": string,
+    "--page-num-border": string,
+    "--color-tint": string
+}
 
 interface BokReaderProps {
     epubDataSource: File | ArrayBuffer | string | null;
@@ -17,7 +26,27 @@ interface BokReaderProps {
     className?: string;
     style?: React.CSSProperties;
     supportedFonts?: { displayName: string; name: string }[];
-    color?: string;
+    themes?: { [key: string]: Theme }
+
+}
+
+const BUILTIN_THEMES: { [key: string]: Theme } = {
+    "Da Vinci": {
+        "--bg-color": "#dccba3",
+        "--text-color": "#463425",
+        "--page-num-text": "#2b1f15",
+        "--page-num-bg": "rgba(70, 52, 37, 0.1)",
+        "--page-num-border": "rgba(70, 52, 37, 0.2)",
+        "--color-tint": "#c9f"
+    },
+    "Amoled Dark": {
+        "--bg-color": "black",
+        "--text-color": "rgb(215, 215, 215)",
+        "--page-num-text": "rgba(255, 255, 255, 0.4)",
+        "--page-num-bg": "rgba(0, 0, 0, 0.3)",
+        "--page-num-border": "rgba(255, 255, 255, 0.2)",
+        "--color-tint": "#c9f"
+    }
 }
 
 export const BokReader: React.FC<BokReaderProps> = ({
@@ -27,18 +56,23 @@ export const BokReader: React.FC<BokReaderProps> = ({
     onError,
     className,
     style,
-    color,
     supportedFonts = [],
+    themes = {},
 }) => {
     const { title, rawContent, toc, isLoading, error, loadEpub, setIsLoading } =
         useEpub();
+
+    const allThemes = useMemo(() => {
+        return { ...BUILTIN_THEMES, ...themes };
+    }, [themes]);
 
     const [activeMenu, setActiveMenu] = useState<'none' | 'options' | 'navigation'>('none');
 
     const [sidePadding, setSidePadding] = usePersistentState<number>("bok_global_side_padding", 20);
     const [fontSize, setFontSize] = usePersistentState<number>("bok_global_fontsize", 1.4);
     const [fontFamily, setFontFamily] = usePersistentState<string>("bok_global_font_family", "Literata");
-    const [colorScheme, setColorScheme] = usePersistentState<string>("bok_global_theme", "Amoled Dark");
+    const [theme, setTheme] = usePersistentState<string>("bok_global_theme", "Amoled Dark");
+
 
     const bokReaderWrapperRef = useRef<HTMLDivElement>(null);
     const bookComponentRef = useRef<BookHandle>(null);
@@ -48,6 +82,10 @@ export const BokReader: React.FC<BokReaderProps> = ({
 
     const [tutorialShown, setTutorialShown] = usePersistentState<boolean>("bok_tutorial_shown", false);
     const [showTutorial, setShowTutorial] = useState(!tutorialShown);
+
+    useEffect(() => {
+        if (!allThemes[theme]) setTheme("Amoled Dark")
+    });
 
     useEffect(() => {
         if (tutorialShown) setShowTutorial(false);
@@ -76,7 +114,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
                 // 3. Set the content to the matched color
                 if (bgColor) {
                     metaThemeColor.setAttribute("content", bgColor);
-                    
+
                     // 4. Also set body background to match (helps with overscroll/notch gaps)
                     document.body.style.backgroundColor = bgColor;
                 }
@@ -84,7 +122,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
         }, 50);
 
         return () => clearTimeout(timer);
-    }, [colorScheme]);
+    }, [theme]);
 
     const dismissTutorial = () => {
         setShowTutorial(false);
@@ -117,14 +155,14 @@ export const BokReader: React.FC<BokReaderProps> = ({
 
     const dynamicCssVariables = useMemo(
         () => ({
-            "--color-tint": color,
             "--side-padding": `${sidePadding}px`,
             "--top-padding": "30px",
             "--bottom-padding": "70px",
             "--font-size": `${fontSize}em`,
             "--font-family": fontFamily,
+            ...allThemes[theme]
         }),
-        [sidePadding, fontSize, fontFamily, color],
+        [sidePadding, fontSize, fontFamily, theme, allThemes],
     );
 
     if (error && !isLoading && !rawContent) {
@@ -142,17 +180,16 @@ export const BokReader: React.FC<BokReaderProps> = ({
 
     return (
         <div
-            className={`bok-reader-container ${colorScheme === 'davinci' ? 'davinci' : ''}`}
+            className={"bok-reader-container"}
             style={{ ...style, ...dynamicCssVariables } as React.CSSProperties}
             ref={bokReaderWrapperRef}
         >
-            <LoadingScreen isLoading={isLoading} color={color} />
+            <LoadingScreen isLoading={isLoading} />
 
             {rawContent && (
                 <>
                     {showTutorial && !isLoading && (
                         <TutorialOverlay
-                            color={color}
                             onDismiss={dismissTutorial}
                         />
                     )}
@@ -167,7 +204,6 @@ export const BokReader: React.FC<BokReaderProps> = ({
                         isOptionMenuVisible={activeMenu !== 'none'}
                         containerElementRef={bokReaderWrapperRef}
                         showTutorial={showTutorial}
-                        // Sync
                         onPageChange={setCurrentBookPage}
                         onPageCountChange={setTotalBookPages}
                     />
@@ -178,18 +214,18 @@ export const BokReader: React.FC<BokReaderProps> = ({
                             fontSize={fontSize}
                             padding={sidePadding}
                             fontFamily={fontFamily}
-                            colorScheme={colorScheme}
+                            theme={theme}
                             setPadding={setSidePadding}
                             setFontSize={setFontSize}
                             setFontFamily={setFontFamily}
-                            setColorScheme={setColorScheme}
+                            setTheme={setTheme}
+                            allThemes={allThemes}
                             supportedFonts={supportedFonts}
-                            supportedColorschemes={[]}
                         />
                     )}
 
                     {activeMenu === 'navigation' && !isLoading && (
-                        <NavigationMenu 
+                        <NavigationMenu
                             toc={toc}
                             currentPage={currentBookPage}
                             totalPages={totalBookPages}
@@ -201,25 +237,25 @@ export const BokReader: React.FC<BokReaderProps> = ({
 
                     {activeMenu === 'none' && !showTutorial && !isLoading && (
                         <div className="bottom-interaction-layer">
-                            <div 
-                                className="trigger-zone" 
+                            <div
+                                className="trigger-zone"
                                 onClick={() => { console.log("Left Click - Reserved") }}
                             />
-                            
-                            <div 
-                                className="trigger-zone" 
+
+                            <div
+                                className="trigger-zone"
                                 onClick={() => setActiveMenu('navigation')}
                                 aria-label="Open Navigation"
                             />
-                            
-                            <div 
-                                className="trigger-zone" 
+
+                            <div
+                                className="trigger-zone"
                                 onClick={() => setActiveMenu('options')}
                                 aria-label="Open Settings"
                             />
-                            
-                            <div 
-                                className="settings-icon" 
+
+                            <div
+                                className="settings-icon"
                                 onClick={() => setActiveMenu('options')}
                                 aria-label="Open Settings"
                             >

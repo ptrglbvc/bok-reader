@@ -49,6 +49,10 @@ const BUILTIN_THEMES: { [key: string]: Theme } = {
     }
 }
 
+// we use this instead of just writing themes = {} as the default argument because
+// that would create a new object on every rerender, causing some useEffect and useMemos to go off 
+const EMPTY_THEMES = {};
+
 export const BokReader: React.FC<BokReaderProps> = ({
     epubDataSource,
     onTitleChange,
@@ -57,7 +61,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
     className,
     style,
     supportedFonts = [],
-    themes = {},
+    themes = EMPTY_THEMES,
 }) => {
     const { title, rawContent, toc, isLoading, error, loadEpub, setIsLoading } =
         useEpub();

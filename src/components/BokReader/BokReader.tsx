@@ -85,7 +85,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
 
     useEffect(() => {
         if (!allThemes[theme]) setTheme("Amoled Dark")
-    });
+    }, [allThemes, theme, setTheme]);
 
     useEffect(() => {
         if (tutorialShown) setShowTutorial(false);

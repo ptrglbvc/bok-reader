@@ -87,9 +87,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
     const [tutorialShown, setTutorialShown] = usePersistentState<boolean>("bok_tutorial_shown", false);
     const [showTutorial, setShowTutorial] = useState(!tutorialShown);
 
-    useEffect(() => {
-        if (!allThemes[theme]) setTheme("Amoled Dark")
-    }, [allThemes, theme, setTheme]);
+    const effectiveTheme = (allThemes as { [key: string]: Theme })[theme] ? theme : "Amoled Dark";
 
     useEffect(() => {
         if (tutorialShown) setShowTutorial(false);
@@ -107,7 +105,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
                 const computedStyle = getComputedStyle(bokReaderWrapperRef.current);
                 const bgColor = computedStyle.getPropertyValue('--bg-color').trim();
 
-                // 2. Find or create the meta theme-color tag
+                // meta-color helps with setting the theme right
                 let metaThemeColor = document.querySelector("meta[name='theme-color']");
                 if (!metaThemeColor) {
                     metaThemeColor = document.createElement("meta");
@@ -115,12 +113,8 @@ export const BokReader: React.FC<BokReaderProps> = ({
                     document.head.appendChild(metaThemeColor);
                 }
 
-                // 3. Set the content to the matched color
                 if (bgColor) {
                     metaThemeColor.setAttribute("content", bgColor);
-
-                    // 4. Also set body background to match (helps with overscroll/notch gaps)
-                    document.body.style.backgroundColor = bgColor;
                 }
             }
         }, 50);
@@ -164,9 +158,9 @@ export const BokReader: React.FC<BokReaderProps> = ({
             "--bottom-padding": "70px",
             "--font-size": `${fontSize}em`,
             "--font-family": fontFamily,
-            ...allThemes[theme]
+            ...(allThemes as { [key: string]: Theme })[effectiveTheme]
         }),
-        [sidePadding, fontSize, fontFamily, theme, allThemes],
+        [sidePadding, fontSize, fontFamily, allThemes, effectiveTheme],
     );
 
     if (error && !isLoading && !rawContent) {

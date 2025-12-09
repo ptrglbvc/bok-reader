@@ -22,7 +22,6 @@ function App() {
     const handleReaderLoading = useCallback(() => { }, []);
 
     const supportedFonts = [
-        { name: "Roboto Condensed", displayName: "Roboto Condensed" },
         { name: "Merriweather", displayName: "Merriweather" },
     ];
     const themes = {

@@ -40,7 +40,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                 try {
                     const span = document.querySelector(`span[data-highlight-id="${highlight.id}"]`);
                     const element = span || document.getElementById(highlight.chapterId);
-                    if (element) {
+                    if (element instanceof HTMLElement) {
                         newPageMap[highlight.id] = calculatePageOfElement(element) + 1;
                     }
                 } catch {
@@ -64,7 +64,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
         try {
             const span = document.querySelector(`span[data-highlight-id="${highlight.id}"]`);
             const element = span || document.getElementById(highlight.chapterId);
-            if (element) {
+            if (element instanceof HTMLElement) {
                 const page = calculatePageOfElement(element);
                 onGoToPage(page);
             }

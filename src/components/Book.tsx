@@ -6,7 +6,8 @@ import React, {
     SetStateAction,
     useCallback,
     useImperativeHandle,
-    forwardRef
+    forwardRef,
+    memo
 } from "react";
 import usePage from "../hooks/usePage";
 import usePercentageRead from "../hooks/usePercentageRead";
@@ -20,6 +21,29 @@ export interface BookHandle {
     findAndJumpToHref: (href: string) => void;
 }
 
+export type HighlightColor = "yellow" | "red" | "blue" | "purple";
+
+export type Highlight = {
+    id: string;
+    chapterId: string;
+    start: number;
+    end: number;
+    color: HighlightColor;
+    text?: string;
+};
+
+const BookContent = memo(
+    ({ content, bookRef }: { content: string; bookRef: React.RefObject<HTMLDivElement> }) => (
+        <div
+            ref={bookRef}
+            dangerouslySetInnerHTML={{ __html: content }}
+            className="book-page"
+            id="bok-main-element"
+        ></div>
+    ),
+    (prev, next) => prev.content === next.content,
+);
+
 interface PageProps {
     content: string;
     title: string;
@@ -32,6 +56,10 @@ interface PageProps {
     containerElementRef: React.RefObject<HTMLDivElement | null>;
     onPageChange?: (page: number) => void;
     onPageCountChange?: (count: number) => void;
+    highlights: Highlight[];
+    onAddHighlight: (highlight: Highlight) => void;
+    onRemoveHighlight: (id: string) => void;
+    onUpdateHighlightColor: (id: string, color: HighlightColor) => void;
 }
 
 const easeOutBack = (x: number): number => {
@@ -52,9 +80,17 @@ const Book = forwardRef<BookHandle, PageProps>(({
     containerElementRef,
     showTutorial,
     onPageChange,
-    onPageCountChange
+    onPageCountChange,
+    highlights,
+    onAddHighlight,
+    onRemoveHighlight,
+    onUpdateHighlightColor
 }, ref) => {
     const bookRef = useRef<HTMLDivElement>(null);
+    const selectionRangeRef = useRef<Range | null>(null);
+    const selectionMenuTimestampRef = useRef<number>(0);
+    const [highlightMenuPosition, setHighlightMenuPosition] = useState<null | { left: number; top: number }>(null);
+    const [highlightActionMenu, setHighlightActionMenu] = useState<null | { id: string; left: number; top: number }>(null);
 
     const [pageWidth, pageHeight, noOfPages] = usePage(containerElementRef);
     const [percentRead, setPercentRead] = usePercentageRead(bookRef);
@@ -153,12 +189,397 @@ const Book = forwardRef<BookHandle, PageProps>(({
         }
     }));
 
+    const isInteractionMenuVisible = Boolean(
+        isOptionMenuVisible || highlightMenuPosition || highlightActionMenu
+    );
+
     useNavigation(
         changePage,
-        isOptionMenuVisible,
+        isInteractionMenuVisible,
         containerElementRef,
         showTutorial,
     );
+
+    const escapeId = useCallback((value: string) => {
+        if (typeof CSS !== "undefined" && CSS.escape) return CSS.escape(value);
+        return value.replace(/[^a-zA-Z0-9_-]/g, "\\$&");
+    }, []);
+
+    const getChapterElement = useCallback((node: Node | null): HTMLElement | null => {
+        if (!node) return null;
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            return (node as Element).closest(".bok-chapter") as HTMLElement | null;
+        }
+        return node.parentElement?.closest(".bok-chapter") as HTMLElement | null;
+    }, []);
+
+    const createTextNodeWalker = useCallback((chapter: Element) => {
+        return document.createTreeWalker(
+            chapter,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode: (node) => {
+                    if (!node.nodeValue || node.nodeValue.length === 0) return NodeFilter.FILTER_REJECT;
+                    const parent = (node as Text).parentElement;
+                    if (!parent) return NodeFilter.FILTER_REJECT;
+                    const tag = parent.tagName.toLowerCase();
+                    if (tag === "script" || tag === "style") return NodeFilter.FILTER_REJECT;
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            }
+        );
+    }, []);
+
+    const getTextNodes = useCallback((chapter: Element) => {
+        const walker = createTextNodeWalker(chapter);
+        const nodes: Text[] = [];
+        let currentNode = walker.nextNode();
+        while (currentNode) {
+            nodes.push(currentNode as Text);
+            currentNode = walker.nextNode();
+        }
+        return nodes;
+    }, [createTextNodeWalker]);
+
+    const getOffsetWithinChapter = useCallback((
+        chapter: Element,
+        container: Node,
+        offset: number
+    ) => {
+        const range = document.createRange();
+        range.selectNodeContents(chapter);
+        try {
+            range.setEnd(container, offset);
+        } catch {
+            return 0;
+        }
+
+        let total = 0;
+        const walker = createTextNodeWalker(chapter);
+        let currentNode = walker.nextNode();
+
+        while (currentNode) {
+            const textNode = currentNode as Text;
+            const startCmp = range.comparePoint(textNode, 0);
+            if (startCmp === 1) break;
+            const endCmp = range.comparePoint(textNode, textNode.length);
+            if (endCmp === 0) {
+                total += textNode.length;
+            } else if (endCmp === 1) {
+                if (range.endContainer === textNode) {
+                    total += range.endOffset;
+                } else {
+                    total += Math.min(range.endOffset, textNode.length);
+                }
+                break;
+            }
+            currentNode = walker.nextNode();
+        }
+
+        return total;
+    }, [createTextNodeWalker]);
+
+    const wrapTextRange = useCallback((textNode: Text, start: number, end: number, highlight: Highlight) => {
+        if (start >= end) return;
+        let targetNode = textNode;
+        if (start > 0) {
+            targetNode = textNode.splitText(start);
+        }
+        if (end < targetNode.length) {
+            targetNode.splitText(end - start);
+        }
+
+        const span = document.createElement("span");
+        span.setAttribute("data-highlight-id", highlight.id);
+        span.setAttribute("data-highlight-color", highlight.color);
+        span.className = `bok-highlight bok-highlight--${highlight.color}`;
+
+        const parent = targetNode.parentNode;
+        if (!parent) return;
+        parent.insertBefore(span, targetNode);
+        span.appendChild(targetNode);
+    }, []);
+
+    const applyHighlightToChapter = useCallback((chapter: Element, highlight: Highlight) => {
+        if (highlight.end <= highlight.start) return;
+
+        const nodes = getTextNodes(chapter);
+        let total = 0;
+
+        for (const textNode of nodes) {
+            const nodeLength = textNode.length;
+            const nodeStart = total;
+            const nodeEnd = total + nodeLength;
+
+            if (nodeEnd <= highlight.start) {
+                total += nodeLength;
+                continue;
+            }
+
+            if (nodeStart >= highlight.end) break;
+
+            const start = Math.max(highlight.start, nodeStart) - nodeStart;
+            const end = Math.min(highlight.end, nodeEnd) - nodeStart;
+            wrapTextRange(textNode, start, end, highlight);
+
+            total += nodeLength;
+        }
+    }, [getTextNodes, wrapTextRange]);
+
+    const renderHighlights = useCallback(() => {
+        const container = bookRef.current;
+        if (!container) return;
+
+        const existingHighlights = container.querySelectorAll("span[data-highlight-id]");
+        existingHighlights.forEach((span) => {
+            const parent = span.parentNode;
+            if (!parent) return;
+            while (span.firstChild) {
+                parent.insertBefore(span.firstChild, span);
+            }
+            parent.removeChild(span);
+        });
+
+        const chapters = container.querySelectorAll(".bok-chapter");
+        chapters.forEach((chapter) => chapter.normalize());
+
+        if (!highlights || highlights.length === 0) return;
+
+        for (const highlight of highlights) {
+            if (!highlight.chapterId) continue;
+            const chapter = container.querySelector(`#${escapeId(highlight.chapterId)}`);
+            if (!chapter) continue;
+            applyHighlightToChapter(chapter, highlight);
+        }
+    }, [applyHighlightToChapter, escapeId, highlights]);
+
+    const showHighlightMenu = useCallback(() => {
+        if (isOptionMenuVisible || showTutorial) return;
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+            setHighlightMenuPosition(null);
+            selectionRangeRef.current = null;
+            return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const container = bookRef.current;
+        if (!container || !container.contains(range.commonAncestorContainer)) {
+            setHighlightMenuPosition(null);
+            selectionRangeRef.current = null;
+            return;
+        }
+
+        setHighlightActionMenu(null);
+
+        const startChapter = getChapterElement(range.startContainer);
+        const endChapter = getChapterElement(range.endContainer);
+        if (!startChapter || !endChapter || startChapter !== endChapter) {
+            setHighlightMenuPosition(null);
+            selectionRangeRef.current = null;
+            return;
+        }
+
+        const containerRect = containerElementRef.current?.getBoundingClientRect();
+        const rangeRect = range.getBoundingClientRect();
+        if (!containerRect || (rangeRect.width === 0 && rangeRect.height === 0)) return;
+
+        const left = rangeRect.left + rangeRect.width / 2 - containerRect.left;
+        const top = rangeRect.top - containerRect.top;
+
+        selectionRangeRef.current = range.cloneRange();
+        selectionMenuTimestampRef.current = Date.now();
+        setHighlightMenuPosition({ left, top });
+    }, [containerElementRef, getChapterElement, isOptionMenuVisible, showTutorial]);
+
+    const handleHighlightColor = useCallback((color: HighlightColor) => {
+        const range = selectionRangeRef.current;
+        if (!range) return;
+
+        const startChapter = getChapterElement(range.startContainer);
+        const endChapter = getChapterElement(range.endContainer);
+        if (!startChapter || !endChapter || startChapter !== endChapter) {
+            setHighlightMenuPosition(null);
+            selectionRangeRef.current = null;
+            return;
+        }
+
+        const chapterId = startChapter.id;
+        if (!chapterId) {
+            setHighlightMenuPosition(null);
+            selectionRangeRef.current = null;
+            return;
+        }
+
+        const start = getOffsetWithinChapter(startChapter, range.startContainer, range.startOffset);
+        const end = getOffsetWithinChapter(startChapter, range.endContainer, range.endOffset);
+        if (end <= start) {
+            setHighlightMenuPosition(null);
+            selectionRangeRef.current = null;
+            return;
+        }
+
+        const highlightText = range.toString().trim();
+        const highlight: Highlight = {
+            id: (typeof crypto !== "undefined" && "randomUUID" in crypto)
+                ? crypto.randomUUID()
+                : `h_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            chapterId,
+            start,
+            end,
+            color,
+            text: highlightText || undefined
+        };
+
+        onAddHighlight(highlight);
+        setHighlightMenuPosition(null);
+        selectionRangeRef.current = null;
+        window.getSelection()?.removeAllRanges();
+    }, [getChapterElement, getOffsetWithinChapter, onAddHighlight]);
+
+    const getHighlightText = useCallback((highlight: Highlight) => {
+        if (highlight.text) return highlight.text;
+        const container = bookRef.current;
+        if (!container) return "";
+        const chapter = container.querySelector(`#${escapeId(highlight.chapterId)}`);
+        if (!chapter) return "";
+        if (highlight.end <= highlight.start) return "";
+
+        const nodes = getTextNodes(chapter);
+        let total = 0;
+        let result = "";
+
+        for (const textNode of nodes) {
+            const nodeLength = textNode.length;
+            const nodeStart = total;
+            const nodeEnd = total + nodeLength;
+
+            if (nodeEnd <= highlight.start) {
+                total += nodeLength;
+                continue;
+            }
+
+            if (nodeStart >= highlight.end) break;
+
+            const start = Math.max(highlight.start, nodeStart) - nodeStart;
+            const end = Math.min(highlight.end, nodeEnd) - nodeStart;
+            result += textNode.data.slice(start, end);
+
+            total += nodeLength;
+        }
+
+        return result;
+    }, [escapeId, getTextNodes]);
+
+    const copyTextToClipboard = useCallback(async (text: string) => {
+        if (!text) return;
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+                return;
+            }
+        } catch {
+            // fallback below
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand("copy");
+        } catch (err) {
+            console.warn("Copy failed:", err);
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }, []);
+
+    useEffect(() => {
+        renderHighlights();
+    }, [renderHighlights, content]);
+
+    useEffect(() => {
+        const container = bookRef.current;
+        if (!container) return;
+
+        const handleMouseUp = () => {
+            showHighlightMenu();
+        };
+        const handleTouchEnd = () => {
+            setTimeout(showHighlightMenu, 0);
+        };
+
+        container.addEventListener("mouseup", handleMouseUp);
+        container.addEventListener("touchend", handleTouchEnd);
+
+        return () => {
+            container.removeEventListener("mouseup", handleMouseUp);
+            container.removeEventListener("touchend", handleTouchEnd);
+        };
+    }, [showHighlightMenu]);
+
+    useEffect(() => {
+        const handleSelectionChange = () => {
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed) {
+                setHighlightMenuPosition(null);
+                selectionRangeRef.current = null;
+            }
+        };
+        document.addEventListener("selectionchange", handleSelectionChange);
+        return () => document.removeEventListener("selectionchange", handleSelectionChange);
+    }, []);
+
+    useEffect(() => {
+        if (isOptionMenuVisible || showTutorial) {
+            setHighlightMenuPosition(null);
+            selectionRangeRef.current = null;
+            setHighlightActionMenu(null);
+        }
+    }, [isOptionMenuVisible, showTutorial]);
+
+    useEffect(() => {
+        const container = bookRef.current;
+        if (!container) return;
+        const handleHighlightClick = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            const highlight = target.closest("span[data-highlight-id]") as HTMLElement | null;
+            if (!highlight) return;
+            event.preventDefault();
+            event.stopPropagation();
+            setHighlightMenuPosition(null);
+            selectionRangeRef.current = null;
+            const id = highlight.getAttribute("data-highlight-id");
+            if (!id) return;
+            const containerRect = containerElementRef.current?.getBoundingClientRect();
+            const highlightRect = highlight.getBoundingClientRect();
+            if (!containerRect) return;
+            const left = highlightRect.left + highlightRect.width / 2 - containerRect.left;
+            const top = highlightRect.top - containerRect.top;
+            setHighlightActionMenu({ id, left, top });
+            window.getSelection()?.removeAllRanges();
+        };
+        container.addEventListener("click", handleHighlightClick);
+        return () => container.removeEventListener("click", handleHighlightClick);
+    }, [containerElementRef]);
+
+    useEffect(() => {
+        const handleDocumentClick = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (target.closest(".highlight-menu") || target.closest(".highlight-action-menu")) return;
+            if (target.closest("span[data-highlight-id]")) return;
+            const selection = window.getSelection();
+            if (selection && !selection.isCollapsed && highlightMenuPosition) return;
+            if (Date.now() - selectionMenuTimestampRef.current < 200) return;
+            setHighlightMenuPosition(null);
+            setHighlightActionMenu(null);
+        };
+        document.addEventListener("click", handleDocumentClick);
+        return () => document.removeEventListener("click", handleDocumentClick);
+    }, [highlightMenuPosition]);
 
     // --- LINK INTERCEPTION ---
     useEffect(() => {
@@ -239,14 +660,128 @@ const Book = forwardRef<BookHandle, PageProps>(({
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [changePage]);
 
+    const activeHighlight = highlightActionMenu
+        ? highlights.find((item) => item.id === highlightActionMenu.id)
+        : null;
+
     return (
         <>
-            <div
-                ref={bookRef}
-                dangerouslySetInnerHTML={{ __html: content }}
-                className="book-page"
-                id="bok-main-element"
-            ></div>
+            <BookContent content={content} bookRef={bookRef} />
+            {highlightMenuPosition && !isOptionMenuVisible && !showTutorial && (
+                <div
+                    className="highlight-menu"
+                    style={{
+                        left: `${highlightMenuPosition.left}px`,
+                        top: `${highlightMenuPosition.top}px`
+                    }}
+                    role="menu"
+                    aria-label="Highlight colors"
+                >
+                    <button
+                        type="button"
+                        className="highlight-swatch highlight-swatch--yellow"
+                        onClick={() => handleHighlightColor("yellow")}
+                        aria-label="Highlight yellow"
+                    />
+                    <button
+                        type="button"
+                        className="highlight-swatch highlight-swatch--red"
+                        onClick={() => handleHighlightColor("red")}
+                        aria-label="Highlight red"
+                    />
+                    <button
+                        type="button"
+                        className="highlight-swatch highlight-swatch--blue"
+                        onClick={() => handleHighlightColor("blue")}
+                        aria-label="Highlight blue"
+                    />
+                    <button
+                        type="button"
+                        className="highlight-swatch highlight-swatch--purple"
+                        onClick={() => handleHighlightColor("purple")}
+                        aria-label="Highlight purple"
+                    />
+                </div>
+            )}
+            {highlightActionMenu && activeHighlight && !isOptionMenuVisible && !showTutorial && (
+                <div
+                    className="highlight-action-menu"
+                    style={{
+                        left: `${highlightActionMenu.left}px`,
+                        top: `${highlightActionMenu.top}px`
+                    }}
+                    role="menu"
+                    aria-label="Highlight actions"
+                >
+                    <div className="highlight-swatch-row">
+                        {activeHighlight && (
+                            <>
+                                <button
+                                    type="button"
+                                    className={`highlight-swatch highlight-swatch--yellow${activeHighlight.color === "yellow" ? " highlight-swatch--active" : ""}`}
+                                    onClick={() => {
+                                        onUpdateHighlightColor(activeHighlight.id, "yellow");
+                                        setHighlightActionMenu(null);
+                                    }}
+                                    aria-label="Change highlight to yellow"
+                                />
+                                <button
+                                    type="button"
+                                    className={`highlight-swatch highlight-swatch--red${activeHighlight.color === "red" ? " highlight-swatch--active" : ""}`}
+                                    onClick={() => {
+                                        onUpdateHighlightColor(activeHighlight.id, "red");
+                                        setHighlightActionMenu(null);
+                                    }}
+                                    aria-label="Change highlight to red"
+                                />
+                                <button
+                                    type="button"
+                                    className={`highlight-swatch highlight-swatch--blue${activeHighlight.color === "blue" ? " highlight-swatch--active" : ""}`}
+                                    onClick={() => {
+                                        onUpdateHighlightColor(activeHighlight.id, "blue");
+                                        setHighlightActionMenu(null);
+                                    }}
+                                    aria-label="Change highlight to blue"
+                                />
+                                <button
+                                    type="button"
+                                    className={`highlight-swatch highlight-swatch--purple${activeHighlight.color === "purple" ? " highlight-swatch--active" : ""}`}
+                                    onClick={() => {
+                                        onUpdateHighlightColor(activeHighlight.id, "purple");
+                                        setHighlightActionMenu(null);
+                                    }}
+                                    aria-label="Change highlight to purple"
+                                />
+                            </>
+                        )}
+                    </div>
+                    <div className="highlight-action-row">
+                        <button
+                            type="button"
+                            className="highlight-action-button"
+                            onClick={async () => {
+                                if (activeHighlight) {
+                                    const text = getHighlightText(activeHighlight);
+                                    await copyTextToClipboard(text);
+                                }
+                                setHighlightActionMenu(null);
+                            }}
+                        >
+                            Copy
+                        </button>
+                        <button
+                            type="button"
+                            className="highlight-action-button highlight-action-button--danger"
+                            onClick={() => {
+                                onRemoveHighlight(activeHighlight.id);
+                                setHighlightActionMenu(null);
+                            }}
+                        >
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            )}
             <PageNumber pages={pageCount} currentPage={currentPage} />
         </>
     );

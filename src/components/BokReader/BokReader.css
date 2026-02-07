@@ -5,6 +5,17 @@
     src: url("../../assets/fonts/garamond/CormorantGaramond-Italic-VariableFont_wght.woff2");
 }
 
+@keyframes highlight-fade-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -12px) scale(1);
+    }
+}
+
 @font-face {
     font-family: "Cormorant Garamond";
     font-style: normal;
@@ -121,6 +132,134 @@
             page-break-inside: avoid;
             -webkit-column-break-inside: avoid;
         }
+    }
+
+    .bok-highlight {
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        border-radius: 0.12em;
+        cursor: pointer;
+    }
+
+    .bok-highlight--yellow {
+        background-color: rgba(255, 235, 59, 0.5);
+    }
+
+    .bok-highlight--red {
+        background-color: rgba(255, 99, 71, 0.5);
+    }
+
+    .bok-highlight--blue {
+        background-color: rgba(79, 195, 247, 0.5);
+    }
+
+    .bok-highlight--purple {
+        background-color: rgba(204, 153, 255, 0.5);
+        background-color: color-mix(in srgb, var(--color-tint) 50%, transparent);
+    }
+
+    .highlight-menu {
+        position: absolute;
+        z-index: 1200;
+        display: flex;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.6);
+        background: color-mix(in srgb, var(--bg-color) 75%, #000 25%);
+        border: 1px solid var(--page-num-border);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(8px);
+        transform: translate(-50%, -12px);
+        pointer-events: auto;
+        opacity: 0;
+        animation: highlight-fade-in 250ms ease-out forwards;
+    }
+
+    .highlight-action-menu {
+        position: absolute;
+        z-index: 1200;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.6);
+        background: color-mix(in srgb, var(--bg-color) 75%, #000 25%);
+        border: 1px solid var(--page-num-border);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(8px);
+        transform: translate(-50%, -12px);
+        pointer-events: auto;
+        opacity: 0;
+        animation: highlight-fade-in 250ms ease-out forwards;
+    }
+
+    .highlight-swatch-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .highlight-action-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .highlight-swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        padding: 0;
+        outline: none;
+    }
+
+    .highlight-swatch:focus-visible {
+        outline: 2px solid var(--color-tint);
+        outline-offset: 2px;
+    }
+
+    .highlight-swatch--active {
+        box-shadow: 0 0 0 2px var(--color-tint);
+    }
+
+    .highlight-action-button {
+        border: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
+        background: transparent;
+        color: var(--page-num-text);
+        padding: 6px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .highlight-action-button:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .highlight-action-button--danger {
+        color: #ff8a8a;
+        border-color: rgba(255, 138, 138, 0.5);
+    }
+
+    .highlight-swatch--yellow {
+        background-color: rgba(255, 235, 59, 0.9);
+    }
+
+    .highlight-swatch--red {
+        background-color: rgba(255, 99, 71, 0.9);
+    }
+
+    .highlight-swatch--blue {
+        background-color: rgba(79, 195, 247, 0.9);
+    }
+
+    .highlight-swatch--purple {
+        background-color: var(--color-tint);
     }
 
     @container (aspect-ratio > 1/1) {
@@ -265,6 +404,22 @@
         position: absolute;
         bottom: 20px;
         right: 25px;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1001;
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+        color: var(--page-num-text);
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+
+    .highlights-icon {
+        position: absolute;
+        bottom: 20px;
+        left: 25px;
         font-size: 14px;
         cursor: pointer;
         z-index: 1001;

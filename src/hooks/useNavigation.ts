@@ -55,13 +55,21 @@ const useNavigation = (
         const handleTouchEnd = (event: TouchEvent) => {
             // FIX: Ignore if we tapped a link
             const target = event.target as HTMLElement;
-            if (target.closest("a")) return;
+            if (
+                target.closest("a") ||
+                target.closest("[data-highlight-id]") ||
+                target.closest(".highlight-menu") ||
+                target.closest(".highlight-action-menu") ||
+                target.closest(".highlights-icon") ||
+                target.closest(".settings-icon")
+            ) return;
 
             if (longPressTimerRef.current && selectedText.current === "") {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;
-                const { pageX, pageY } = event.touches[0]; // Note: changedPageX might be needed if touches is empty on end
-                // const touch = event.changedTouches[0];
+                const touchPoint = event.changedTouches[0] || event.touches[0];
+                if (!touchPoint) return;
+                const { pageX, pageY } = touchPoint;
                 handlePageClick(pageX, pageY);
             }
         };
@@ -86,7 +94,14 @@ const useNavigation = (
         const handleMouseUp = (event: MouseEvent) => {
             // FIX: Ignore if we clicked a link
             const target = event.target as HTMLElement;
-            if (target.closest("a")) return;
+            if (
+                target.closest("a") ||
+                target.closest("[data-highlight-id]") ||
+                target.closest(".highlight-menu") ||
+                target.closest(".highlight-action-menu") ||
+                target.closest(".highlights-icon") ||
+                target.closest(".settings-icon")
+            ) return;
 
             if (longPressTimerRef.current && !selectedText.current) {
                 clearTimeout(longPressTimerRef.current);

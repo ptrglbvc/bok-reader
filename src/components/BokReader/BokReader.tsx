@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Settings } from "lucide-react";
+import { Settings, Highlighter } from "lucide-react";
 import useEpub from "../../hooks/useEpub";
 import usePersistentState from "../../hooks/usePersistentState"
-import Book, { BookHandle } from "../Book";
+import Book, { BookHandle, Highlight } from "../Book";
 import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
 import NavigationMenu from "../NavigationMenu/NavigationMenu";
+import HighlightsMenu from "../HighlightsMenu/HighlightsMenu";
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
 import "./BokReader.css"
 
@@ -70,13 +71,14 @@ export const BokReader: React.FC<BokReaderProps> = ({
         return { ...BUILTIN_THEMES, ...themes };
     }, [themes]);
 
-    const [activeMenu, setActiveMenu] = useState<'none' | 'options' | 'navigation'>('none');
+    const [activeMenu, setActiveMenu] = useState<'none' | 'options' | 'navigation' | 'highlights'>('none');
 
     const [sidePadding, setSidePadding] = usePersistentState<number>("bok_global_side_padding", 20);
     const [fontSize, setFontSize] = usePersistentState<number>("bok_global_fontsize", 1.4);
     const [fontFamily, setFontFamily] = usePersistentState<string>("bok_global_font_family", "Literata");
     const [theme, setTheme] = usePersistentState<string>("bok_global_theme", "Amoled Dark");
 
+    const [highlights, setHighlights] = useState<Highlight[]>([]);
 
     const bokReaderWrapperRef = useRef<HTMLDivElement>(null);
     const bookComponentRef = useRef<BookHandle>(null);
@@ -88,6 +90,46 @@ export const BokReader: React.FC<BokReaderProps> = ({
     const [showTutorial, setShowTutorial] = useState(!tutorialShown);
 
     const effectiveTheme = (allThemes as { [key: string]: Theme })[theme] ? theme : "Amoled Dark";
+
+    useEffect(() => {
+        if (!title || title === "Loading...") return;
+        const key = `bok_highlights_${title}`;
+        try {
+            const stored = localStorage.getItem(key);
+            if (stored) {
+                setHighlights(JSON.parse(stored));
+            } else {
+                setHighlights([]);
+            }
+        } catch (error) {
+            console.warn(`Error reading highlights for "${title}":`, error);
+            setHighlights([]);
+        }
+    }, [title]);
+
+    useEffect(() => {
+        if (!title || title === "Loading...") return;
+        const key = `bok_highlights_${title}`;
+        try {
+            localStorage.setItem(key, JSON.stringify(highlights));
+        } catch (error) {
+            console.warn(`Error saving highlights for "${title}":`, error);
+        }
+    }, [highlights, title]);
+
+    const handleAddHighlight = (highlight: Highlight) => {
+        setHighlights((prev) => [...prev, highlight]);
+    };
+
+    const handleRemoveHighlight = (id: string) => {
+        setHighlights((prev) => prev.filter((highlight) => highlight.id !== id));
+    };
+
+    const handleUpdateHighlightColor = (id: string, color: Highlight["color"]) => {
+        setHighlights((prev) => prev.map((highlight) => (
+            highlight.id === id ? { ...highlight, color } : highlight
+        )));
+    };
 
     useEffect(() => {
         if (tutorialShown) setShowTutorial(false);
@@ -204,6 +246,10 @@ export const BokReader: React.FC<BokReaderProps> = ({
                         showTutorial={showTutorial}
                         onPageChange={setCurrentBookPage}
                         onPageCountChange={setTotalBookPages}
+                        highlights={highlights}
+                        onAddHighlight={handleAddHighlight}
+                        onRemoveHighlight={handleRemoveHighlight}
+                        onUpdateHighlightColor={handleUpdateHighlightColor}
                     />
 
                     {activeMenu === 'options' && (
@@ -233,6 +279,16 @@ export const BokReader: React.FC<BokReaderProps> = ({
                         />
                     )}
 
+                    {activeMenu === 'highlights' && !isLoading && (
+                        <HighlightsMenu
+                            highlights={highlights}
+                            onClose={() => setActiveMenu('none')}
+                            onGoToPage={(page) => bookComponentRef.current?.goToPage(page)}
+                            onRemoveHighlight={handleRemoveHighlight}
+                            onUpdateHighlightColor={handleUpdateHighlightColor}
+                        />
+                    )}
+
                     {activeMenu === 'none' && !showTutorial && !isLoading && (
                         <div className="bottom-interaction-layer">
                             <div
@@ -258,6 +314,14 @@ export const BokReader: React.FC<BokReaderProps> = ({
                                 aria-label="Open Settings"
                             >
                                 <Settings size={16} />
+                            </div>
+
+                            <div
+                                className="highlights-icon"
+                                onClick={() => setActiveMenu('highlights')}
+                                aria-label="Open Highlights"
+                            >
+                                <Highlighter size={16} />
                             </div>
                         </div>
                     )}

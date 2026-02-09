@@ -293,7 +293,8 @@ export const BokReader: React.FC<BokReaderProps> = ({
                         <div className="bottom-interaction-layer">
                             <div
                                 className="trigger-zone"
-                                onClick={() => { console.log("Left Click - Reserved") }}
+                                onClick={() => setActiveMenu('highlights')}
+                                aria-label="Open Highlights"
                             />
 
                             <div
@@ -318,8 +319,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
 
                             <div
                                 className="highlights-icon"
-                                onClick={() => setActiveMenu('highlights')}
-                                aria-label="Open Highlights"
+                                aria-label="Highlights"
                             >
                                 <Highlighter size={16} />
                             </div>

@@ -15,6 +15,7 @@ import usePersistentState from "../hooks/usePersistentState";
 import useNavigation from "../hooks/useNavigation";
 import PageNumber from "./PageNumber";
 import { calculatePageOfElement } from "../helpful_functions/calculatePageOfElement";
+import Toast from "./Toast/Toast";
 
 export interface BookHandle {
     goToPage: (page: number) => void;
@@ -63,7 +64,7 @@ interface PageProps {
 }
 
 const easeOutBack = (x: number): number => {
-    const c1 = 1.1; 
+    const c1 = 1.1;
     const c3 = c1 + 1;
     return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
 };
@@ -89,8 +90,13 @@ const Book = forwardRef<BookHandle, PageProps>(({
     const bookRef = useRef<HTMLDivElement>(null);
     const selectionRangeRef = useRef<Range | null>(null);
     const selectionMenuTimestampRef = useRef<number>(0);
+    const suppressSelectionClearUntilRef = useRef(0);
+    const ignoreDocumentClickUntilRef = useRef(0);
+    const selectionMenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [highlightMenuPosition, setHighlightMenuPosition] = useState<null | { left: number; top: number }>(null);
     const [highlightActionMenu, setHighlightActionMenu] = useState<null | { id: string; left: number; top: number }>(null);
+    const [isCopyToastVisible, setIsCopyToastVisible] = useState(false);
+    const copyToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [pageWidth, pageHeight, noOfPages] = usePage(containerElementRef);
     const [percentRead, setPercentRead] = usePercentageRead(bookRef);
@@ -106,11 +112,11 @@ const Book = forwardRef<BookHandle, PageProps>(({
     const animationRef = useRef<number | null>(null);
 
     useEffect(() => {
-        if(onPageCountChange) onPageCountChange(pageCount);
+        if (onPageCountChange) onPageCountChange(pageCount);
     }, [pageCount, onPageCountChange]);
 
     useEffect(() => {
-        if(onPageChange) onPageChange(currentPage);
+        if (onPageChange) onPageChange(currentPage);
     }, [currentPage, onPageChange]);
 
     useEffect(() => {
@@ -176,16 +182,16 @@ const Book = forwardRef<BookHandle, PageProps>(({
     useImperativeHandle(ref, () => ({
         goToPage,
         findAndJumpToHref: (href: string) => {
-             const elementId = href.startsWith("#") ? href.substring(1) : href;
-             const targetElement = document.getElementById(elementId);
-             if (targetElement) {
-                 try {
-                     const targetPage = calculatePageOfElement(targetElement);
-                     goToPage(targetPage);
-                 } catch (err) {
-                     console.warn("Could not calculate page for link", err);
-                 }
-             }
+            const elementId = href.startsWith("#") ? href.substring(1) : href;
+            const targetElement = document.getElementById(elementId);
+            if (targetElement) {
+                try {
+                    const targetPage = calculatePageOfElement(targetElement);
+                    goToPage(targetPage);
+                } catch (err) {
+                    console.warn("Could not calculate page for link", err);
+                }
+            }
         }
     }));
 
@@ -353,6 +359,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
         }
     }, [applyHighlightToChapter, escapeId, highlights]);
 
+
     const showHighlightMenu = useCallback(() => {
         if (isOptionMenuVisible || showTutorial) return;
         const selection = window.getSelection();
@@ -381,7 +388,13 @@ const Book = forwardRef<BookHandle, PageProps>(({
         }
 
         const containerRect = containerElementRef.current?.getBoundingClientRect();
-        const rangeRect = range.getBoundingClientRect();
+        let rangeRect = range.getBoundingClientRect();
+        if (rangeRect.width === 0 && rangeRect.height === 0) {
+            const rects = Array.from(range.getClientRects());
+            if (rects.length > 0) {
+                rangeRect = rects[0];
+            }
+        }
         if (!containerRect || (rangeRect.width === 0 && rangeRect.height === 0)) return;
 
         const left = rangeRect.left + rangeRect.width / 2 - containerRect.left;
@@ -390,6 +403,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
         selectionRangeRef.current = range.cloneRange();
         selectionMenuTimestampRef.current = Date.now();
         setHighlightMenuPosition({ left, top });
+
     }, [containerElementRef, getChapterElement, isOptionMenuVisible, showTutorial]);
 
     const handleHighlightColor = useCallback((color: HighlightColor) => {
@@ -509,6 +523,11 @@ const Book = forwardRef<BookHandle, PageProps>(({
             showHighlightMenu();
         };
         const handleTouchEnd = () => {
+            const isCoarsePointer = typeof window !== "undefined" && (
+                window.matchMedia?.("(pointer: coarse)")?.matches ||
+                navigator.maxTouchPoints > 0
+            );
+            if (isCoarsePointer) return;
             setTimeout(showHighlightMenu, 0);
         };
 
@@ -522,15 +541,60 @@ const Book = forwardRef<BookHandle, PageProps>(({
     }, [showHighlightMenu]);
 
     useEffect(() => {
+        const container = bookRef.current;
+        if (!container) return;
+        const handleContextMenu = (event: MouseEvent) => {
+            event.preventDefault();
+        };
+        container.addEventListener("contextmenu", handleContextMenu);
+        return () => container.removeEventListener("contextmenu", handleContextMenu);
+    }, []);
+
+    useEffect(() => {
         const handleSelectionChange = () => {
+            if (Date.now() < suppressSelectionClearUntilRef.current) {
+                return;
+            }
             const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+                const isCoarsePointer = typeof window !== "undefined" && (
+                    window.matchMedia?.("(pointer: coarse)")?.matches ||
+                    navigator.maxTouchPoints > 0
+                );
+                if (isCoarsePointer) {
+                    if (selectionMenuTimerRef.current) {
+                        clearTimeout(selectionMenuTimerRef.current);
+                    }
+                    selectionMenuTimerRef.current = setTimeout(() => {
+                        selectionMenuTimerRef.current = null;
+                        showHighlightMenu();
+                    }, 250);
+                    return;
+                }
+            }
+
             if (!selection || selection.isCollapsed) {
+                if (selectionMenuTimerRef.current) {
+                    clearTimeout(selectionMenuTimerRef.current);
+                    selectionMenuTimerRef.current = null;
+                }
                 setHighlightMenuPosition(null);
                 selectionRangeRef.current = null;
             }
         };
         document.addEventListener("selectionchange", handleSelectionChange);
         return () => document.removeEventListener("selectionchange", handleSelectionChange);
+    }, [showHighlightMenu]);
+
+    useEffect(() => {
+        return () => {
+            if (copyToastTimerRef.current) {
+                clearTimeout(copyToastTimerRef.current);
+            }
+            if (selectionMenuTimerRef.current) {
+                clearTimeout(selectionMenuTimerRef.current);
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -568,6 +632,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
 
     useEffect(() => {
         const handleDocumentClick = (event: MouseEvent) => {
+            if (Date.now() < ignoreDocumentClickUntilRef.current) return;
             const target = event.target as HTMLElement;
             if (target.closest(".highlight-menu") || target.closest(".highlight-action-menu")) return;
             if (target.closest("span[data-highlight-id]")) return;
@@ -623,8 +688,8 @@ const Book = forwardRef<BookHandle, PageProps>(({
                 if (!currentBookRef) return;
                 const totalWidth = currentBookRef.scrollWidth;
                 const newPageCount = pageWidth > 0 && totalWidth > 0
-                        ? Math.round(totalWidth / pageWidth)
-                        : 0;
+                    ? Math.round(totalWidth / pageWidth)
+                    : 0;
                 const noOfWholePages = noOfPages === 1 ? newPageCount : Math.round(newPageCount / 2);
                 setPageCount(noOfWholePages);
                 if (noOfWholePages > 0 && currentBookRef.clientWidth > 0) {
@@ -663,6 +728,18 @@ const Book = forwardRef<BookHandle, PageProps>(({
     const activeHighlight = highlightActionMenu
         ? highlights.find((item) => item.id === highlightActionMenu.id)
         : null;
+
+    const triggerCopyToast = useCallback(() => {
+        setIsCopyToastVisible(false);
+        requestAnimationFrame(() => setIsCopyToastVisible(true));
+
+        if (copyToastTimerRef.current) {
+            clearTimeout(copyToastTimerRef.current);
+        }
+        copyToastTimerRef.current = setTimeout(() => {
+            setIsCopyToastVisible(false);
+        }, 1600);
+    }, []);
 
     return (
         <>
@@ -763,6 +840,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
                                 if (activeHighlight) {
                                     const text = getHighlightText(activeHighlight);
                                     await copyTextToClipboard(text);
+                                    triggerCopyToast();
                                 }
                                 setHighlightActionMenu(null);
                             }}
@@ -782,6 +860,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
                     </div>
                 </div>
             )}
+            <Toast message="Copied to clipboard" visible={isCopyToastVisible} />
             <PageNumber pages={pageCount} currentPage={currentPage} />
         </>
     );

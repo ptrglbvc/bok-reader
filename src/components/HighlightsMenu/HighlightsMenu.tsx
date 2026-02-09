@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import styles from "./HighlightsMenu.module.css";
 import { Highlight, HighlightColor } from "../Book";
 import { calculatePageOfElement } from "../../helpful_functions/calculatePageOfElement";
+import Toast from "../Toast/Toast";
 
 interface HighlightsMenuProps {
     highlights: Highlight[];
@@ -24,6 +25,8 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
     const [isClosing, setIsClosing] = useState(false);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [pageMap, setPageMap] = useState<{ [id: string]: number }>({});
+    const [isCopyToastVisible, setIsCopyToastVisible] = useState(false);
+    const copyToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         requestAnimationFrame(() => {
@@ -51,6 +54,14 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
         }, 100);
         return () => clearTimeout(timer);
     }, [highlights]);
+
+    useEffect(() => {
+        return () => {
+            if (copyToastTimerRef.current) {
+                clearTimeout(copyToastTimerRef.current);
+            }
+        };
+    }, []);
 
     const handleClose = useCallback(() => {
         requestAnimationFrame(() => {
@@ -112,6 +123,18 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
         }
     };
 
+    const triggerCopyToast = useCallback(() => {
+        setIsCopyToastVisible(false);
+        requestAnimationFrame(() => setIsCopyToastVisible(true));
+
+        if (copyToastTimerRef.current) {
+            clearTimeout(copyToastTimerRef.current);
+        }
+        copyToastTimerRef.current = setTimeout(() => {
+            setIsCopyToastVisible(false);
+        }, 1600);
+    }, []);
+
     const renderHighlights = () => {
         return (
             <ul className={styles["highlight-list"]}>
@@ -169,6 +192,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                                             className="highlight-action-button"
                                             onClick={async () => {
                                                 await copyTextToClipboard(text);
+                                                triggerCopyToast();
                                             }}
                                         >
                                             Copy
@@ -216,6 +240,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                     )}
                 </div>
             </div>
+            <Toast message="Copied to clipboard" visible={isCopyToastVisible} />
         </div>
     );
 };

@@ -125,9 +125,7 @@ export default function useEpub() {
             }
         });
 
-        // --- TOC PARSING START ---
         await parseTableOfContents(opf, manifestItems, hrefToId);
-        // --- TOC PARSING END ---
 
         const spineRefs = Array.from(opf.querySelectorAll("spine > itemref")).map((ref) => ref.getAttribute("idref"));
 
@@ -177,7 +175,11 @@ export default function useEpub() {
 
         addStyling();
         setRawContent(combinedContent);
-        setIsLoading(false);
+        // i had this set to on before, and it would cause the loading screen to 
+        // pop in and out before the previous reading position is made. 
+        // hopefully it doesn't cause any bugs to leave this like now
+        // "For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future." - Jeremiah 29:11 
+        //setIsLoading(false);
     }
 
     async function parseTableOfContents(

@@ -88,6 +88,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
     onUpdateHighlightColor
 }, ref) => {
     const bookRef = useRef<HTMLDivElement>(null);
+    const initialLoadDoneRef = useRef(false);
     const selectionRangeRef = useRef<Range | null>(null);
     const selectionMenuTimestampRef = useRef<number>(0);
     const suppressSelectionClearUntilRef = useRef(0);
@@ -702,6 +703,10 @@ const Book = forwardRef<BookHandle, PageProps>(({
                     setCurrentPage(1);
                 }
                 setIsLoading(false);
+                if (!initialLoadDoneRef.current) {
+                    initialLoadDoneRef.current = true;
+                    document.getElementById("root")?.dispatchEvent(new CustomEvent("react-ready"));
+                }
             });
         }, 400);
         return () => {

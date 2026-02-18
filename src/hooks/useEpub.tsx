@@ -96,11 +96,12 @@ export default function useEpub() {
     const [toc, setToc] = useState<TocItem[]>([]); // 2. State for TOC
     const [error, setError] = useState<string | null>(null);
 
-    let currentObfFolder = "";
-    let currentStyle = "";
+    const currentObfFolder = useRef("");
+    const currentStyle = useRef("");
     const currentZip = useRef<JSZip | null>(null);
     const styleLinkElement = useRef<HTMLLinkElement | null>(null);
-    const currentImages: BlobImages = {};
+    const currentImages = useRef<BlobImages>({});
+    const parseManifestAndSpineRef = useRef<(opf: Document) => Promise<void>>(async () => { });
 
     const loadEpub = useCallback(
         async (source: File | ArrayBuffer | string) => {
@@ -110,6 +111,9 @@ export default function useEpub() {
             setTitle("Loading...");
             setBookId("");
             setError(null);
+            currentObfFolder.current = "";
+            currentStyle.current = "";
+            currentImages.current = {};
 
             if (styleLinkElement.current) {
                 document.head.removeChild(styleLinkElement.current);
@@ -132,6 +136,35 @@ export default function useEpub() {
                 if (!buffer || buffer.byteLength === 0) throw new Error("EPUB source is empty.");
 
                 currentZip.current = await JSZip.loadAsync(buffer);
+
+                const readContainer = async () => {
+                    if (!currentZip.current) throw new Error("Zip not loaded");
+
+                    const containerFile = currentZip.current.file("META-INF/container.xml");
+                    if (!containerFile) throw new Error("META-INF/container.xml not found.");
+
+                    const containerContent = await containerFile.async("text");
+                    const parser = new DOMParser();
+                    const containerDOM = parser.parseFromString(containerContent, "application/xml");
+                    const rootfile = containerDOM.querySelector('rootfile[media-type="application/oebps-package+xml"]');
+                    const opfPath = rootfile?.getAttribute("full-path");
+
+                    if (!opfPath) throw new Error("OPF file path not found.");
+
+                    currentObfFolder.current = opfPath.substring(0, opfPath.lastIndexOf("/") + 1);
+                    const opfFile = currentZip.current.file(opfPath);
+                    if (!opfFile) throw new Error(`OPF file not found at path: ${opfPath}`);
+
+                    const opfContent = await opfFile.async("text");
+                    const parsedOpf = parser.parseFromString(opfContent, "application/xml");
+
+                    if (parsedOpf.querySelector("parsererror")) throw new Error("Error parsing OPF file.");
+
+                    getTitle(parsedOpf);
+                    setBookId(await createBookId(parsedOpf));
+                    await parseManifestAndSpineRef.current(parsedOpf);
+                };
+
                 await readContainer();
             } catch (err: unknown) {
                 console.error("Error processing EPUB source:", err);
@@ -141,34 +174,6 @@ export default function useEpub() {
         },
         []
     );
-
-    async function readContainer() {
-        if (!currentZip.current) throw new Error("Zip not loaded");
-
-        const containerFile = currentZip.current.file("META-INF/container.xml");
-        if (!containerFile) throw new Error("META-INF/container.xml not found.");
-
-        const containerContent = await containerFile.async("text");
-        const parser = new DOMParser();
-        const containerDOM = parser.parseFromString(containerContent, "application/xml");
-        const rootfile = containerDOM.querySelector('rootfile[media-type="application/oebps-package+xml"]');
-        const opfPath = rootfile?.getAttribute("full-path");
-
-        if (!opfPath) throw new Error("OPF file path not found.");
-
-        currentObfFolder = opfPath.substring(0, opfPath.lastIndexOf("/") + 1);
-        const opfFile = currentZip.current.file(opfPath);
-        if (!opfFile) throw new Error(`OPF file not found at path: ${opfPath}`);
-
-        const opfContent = await opfFile.async("text");
-        const parsedOpf = parser.parseFromString(opfContent, "application/xml");
-
-        if (parsedOpf.querySelector("parsererror")) throw new Error("Error parsing OPF file.");
-
-        getTitle(parsedOpf);
-        setBookId(await createBookId(parsedOpf));
-        await parseManifestAndSpine(parsedOpf);
-    }
 
     function getTitle(opf: Document) {
         const titleElement = opf.querySelector("metadata > dc\\:title") || opf.querySelector("metadata > title");
@@ -206,7 +211,7 @@ export default function useEpub() {
             const item = manifestItems[idref];
             if (item && (item.type.includes("html") || item.type.includes("xml"))) {
                 try {
-                    const itemFetchPath = currentObfFolder + item.href;
+                    const itemFetchPath = currentObfFolder.current + item.href;
                     const itemFile = currentZip.current.file(itemFetchPath);
                     if (itemFile) {
                         const itemContent = await itemFile.async("text");
@@ -230,12 +235,12 @@ export default function useEpub() {
         for (const id in manifestItems) {
             const item = manifestItems[id];
             if (item.type.includes("css")) {
-                const cssPath = currentObfFolder + item.href;
+                const cssPath = currentObfFolder.current + item.href;
                 if (!loadedCssHrefs.has(cssPath)) {
                     const cssFile = currentZip.current.file(cssPath);
                     if (cssFile) {
                         const rawCss = await cssFile.async("text");
-                        currentStyle += stripUnneededRules(rawCss) + "\n";
+                        currentStyle.current += stripUnneededRules(rawCss) + "\n";
                         loadedCssHrefs.add(cssPath);
                     }
                 }
@@ -250,6 +255,8 @@ export default function useEpub() {
         // "For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future." - Jeremiah 29:11 
         //setIsLoading(false);
     }
+
+    parseManifestAndSpineRef.current = parseManifestAndSpine;
 
     async function parseTableOfContents(
         opf: Document,
@@ -281,7 +288,7 @@ export default function useEpub() {
             return;
         }
 
-        const tocPath = currentObfFolder + tocItem.href;
+        const tocPath = currentObfFolder.current + tocItem.href;
         const tocFile = currentZip.current.file(tocPath);
 
         if (!tocFile) return;
@@ -367,7 +374,7 @@ export default function useEpub() {
             .map((m) => m[1])
             .join("\n");
         allCss = stripUnneededRules(allCss);
-        currentStyle += allCss;
+        currentStyle.current += allCss;
 
         let processed = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
         processed = processed.replace(/<link[^>]*?>/gi, "");
@@ -436,7 +443,7 @@ export default function useEpub() {
         let src = img.getAttribute("src");
         if (!src) return;
         while (src.startsWith(".") || src.startsWith("/")) src = src.slice(1);
-        src = currentObfFolder + src;
+        src = currentObfFolder.current + src;
         await resolveImageSrc(img, "src", src);
     }
 
@@ -444,25 +451,25 @@ export default function useEpub() {
         let src = image.getAttribute("xlink:href");
         if (!src) return;
         while (src.startsWith(".") || src.startsWith("/")) src = src.slice(1);
-        src = currentObfFolder + src;
+        src = currentObfFolder.current + src;
         await resolveImageSrc(image, "xlink:href", src);
     }
 
     async function resolveImageSrc(element: Element, attribute: string, src: string) {
-        if (currentImages[src] === undefined) {
+        if (currentImages.current[src] === undefined) {
             const imgFile = currentZip.current?.file(src);
             if (imgFile) {
                 try {
                     const blob = await imgFile.async("blob");
-                    currentImages[src] = URL.createObjectURL(blob);
+                    currentImages.current[src] = URL.createObjectURL(blob);
                 } catch (e) {
-                    currentImages[src] = "";
+                    currentImages.current[src] = "";
                 }
             } else {
-                currentImages[src] = "";
+                currentImages.current[src] = "";
             }
         }
-        element.setAttribute(attribute, currentImages[src]);
+        element.setAttribute(attribute, currentImages.current[src]);
     }
 
     function stripUnneededRules(allCss: string): string {
@@ -488,8 +495,8 @@ export default function useEpub() {
     }
 
     function addStyling() {
-        if (!currentStyle.trim()) return;
-        const styleBlob = new Blob([currentStyle], { type: "text/css" });
+        if (!currentStyle.current.trim()) return;
+        const styleBlob = new Blob([currentStyle.current], { type: "text/css" });
         const blobURL = URL.createObjectURL(styleBlob);
         styleLinkElement.current = document.createElement("link");
         styleLinkElement.current.href = blobURL;

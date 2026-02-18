@@ -20,6 +20,8 @@ import Toast from "./Toast/Toast";
 export interface BookHandle {
     goToPage: (page: number) => void;
     findAndJumpToHref: (href: string) => void;
+    setProgress: (progress: number) => void;
+    getProgress: () => number;
 }
 
 export type HighlightColor = "yellow" | "red" | "blue" | "purple";
@@ -119,6 +121,7 @@ interface PageProps {
     containerElementRef: React.RefObject<HTMLDivElement | null>;
     onPageChange?: (page: number) => void;
     onPageCountChange?: (count: number) => void;
+    onProgressChange?: (progress: number) => void;
     highlights: Highlight[];
     onAddHighlight: (highlight: Highlight) => void;
     onRemoveHighlight: (id: string) => void;
@@ -145,6 +148,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
     showTutorial,
     onPageChange,
     onPageCountChange,
+    onProgressChange,
     highlights,
     onAddHighlight,
     onRemoveHighlight,
@@ -234,6 +238,12 @@ const Book = forwardRef<BookHandle, PageProps>(({
         }
     }, [percentRead, progressStorageKey]);
 
+    useEffect(() => {
+        if (onProgressChange) {
+            onProgressChange(percentRead);
+        }
+    }, [onProgressChange, percentRead]);
+
 
     // --- ANIMATION & NAVIGATION LOGIC ---
     const performScrollAnimation = useCallback((targetPage: number) => {
@@ -271,6 +281,17 @@ const Book = forwardRef<BookHandle, PageProps>(({
         performScrollAnimation(safePage);
     }, [pageCount, performScrollAnimation]);
 
+    const setProgress = useCallback((progress: number) => {
+        const clampedProgress = Math.max(0, Math.min(1, progress));
+        setPercentRead(clampedProgress);
+
+        if (pageCount <= 0) return;
+        let targetPage = Math.round(pageCount * clampedProgress);
+        targetPage = Math.max(0, Math.min(pageCount - 1, targetPage));
+        setCurrentPage(targetPage);
+        performScrollAnimation(targetPage);
+    }, [pageCount, performScrollAnimation, setPercentRead]);
+
     const changePage = useCallback((amount: number) => {
         setCurrentPage((prev) => {
             let newValue = prev + amount;
@@ -284,6 +305,8 @@ const Book = forwardRef<BookHandle, PageProps>(({
     // 4. Expose methods via ref
     useImperativeHandle(ref, () => ({
         goToPage,
+        setProgress,
+        getProgress: () => percentReadRef.current,
         findAndJumpToHref: (href: string) => {
             const elementId = href.startsWith("#") ? href.substring(1) : href;
             const targetElement = document.getElementById(elementId);
@@ -296,7 +319,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
                 }
             }
         }
-    }));
+    }), [goToPage, setProgress]);
 
     const isInteractionMenuVisible = Boolean(
         isOptionMenuVisible || highlightMenuPosition || highlightActionMenu

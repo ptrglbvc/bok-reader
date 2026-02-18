@@ -45,9 +45,21 @@ export default MyBookViewer;
 -   `onTitleChange?`: `(title: string) => void` - Callback when the book title is loaded.
 -   `onLoadingChange?`: `(isLoading: boolean) => void` - Callback when the loading state changes.
 -   `onError?`: `(errorMsg: string) => void` - Callback when an error occurs during loading or processing.
+-   `onSyncEvent?`: `(event: BokReaderSyncEvent) => void` - Emits semantic local mutations for sync queues (`progress.set`, `highlight.add`, `highlight.remove`, `highlight.updateColor`).
+-   `syncState?`: `BokReaderSyncState | null` - Host-provided remote/hydrated state for the current `bookId`.
+-   `onConflictDetected?`: `(conflict: BokReaderSyncConflict) => void` - Called when incoming `syncState` conflicts with non-empty local data and `forceApply` is not set.
 -   `supportedFonts?`: `{ displayName: string; name: string }[]` - Array of custom fonts to make available in the options menu.
 -   `color?`: `string` - Hexadecimal value. Color tint of the component.
 -   `style?`: `React.CSSProperties` - Optional inline styles for the main wrapper component.
+
+## Imperative Sync API (ref)
+
+`BokReader` exposes a ref handle:
+
+-   `getSyncSnapshot(): BokReaderSyncSnapshot | null`
+-   `applySyncState(syncState: BokReaderSyncState, options?: { forceApply?: boolean }): boolean` (`true` means accepted: applied now or queued until reader is ready)
+-   `getPendingSyncEvents(): BokReaderSyncEvent[]`
+-   `acknowledgeSyncEvents(mutationIds: string | string[]): void`
 
 ## Development Scripts
 

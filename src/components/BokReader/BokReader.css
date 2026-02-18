@@ -170,7 +170,7 @@
         border: 1px solid var(--page-num-border);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(8px);
-        transform: translate(-50%, -14px);
+        transform: translateX(-50%);
         pointer-events: auto;
         opacity: 0;
         animation: highlight-fade-in 250ms ease-out forwards;
@@ -189,7 +189,7 @@
         border: 1px solid var(--page-num-border);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(8px);
-        transform: translate(-50%, -12px);
+        transform: translateX(-50%);
         pointer-events: auto;
         opacity: 0;
         animation: highlight-fade-in 250ms ease-out forwards;

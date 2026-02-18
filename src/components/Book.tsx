@@ -38,6 +38,7 @@ type VerticalPlacement = "above" | "below";
 
 type HighlightMenuPosition = {
     left: number;
+    anchorLeft: number;
     top: number;
     anchorTop: number;
     anchorBottom: number;
@@ -49,8 +50,11 @@ type HighlightActionMenuPosition = HighlightMenuPosition & {
 };
 
 const MENU_VERTICAL_GAP = 12;
+const MENU_HORIZONTAL_GAP = 12;
 const SELECTION_MENU_ESTIMATED_HEIGHT = 44;
 const ACTION_MENU_ESTIMATED_HEIGHT = 94;
+const SELECTION_MENU_ESTIMATED_WIDTH = 135;
+const ACTION_MENU_ESTIMATED_WIDTH = 180;
 
 const getMenuTopPosition = ({
     anchorTop,
@@ -75,6 +79,20 @@ const getMenuTopPosition = ({
         top: Math.min(maxTop, anchorBottom + MENU_VERTICAL_GAP),
         placement: "below"
     };
+};
+
+const getMenuLeftPosition = ({
+    anchorLeft,
+    containerWidth,
+    menuWidth
+}: {
+    anchorLeft: number;
+    containerWidth: number;
+    menuWidth: number;
+}): number => {
+    const minLeft = menuWidth / 2 + MENU_HORIZONTAL_GAP;
+    const maxLeft = Math.max(minLeft, containerWidth - menuWidth / 2 - MENU_HORIZONTAL_GAP);
+    return Math.max(minLeft, Math.min(maxLeft, anchorLeft));
 };
 
 const BookContent = memo(
@@ -444,7 +462,12 @@ const Book = forwardRef<BookHandle, PageProps>(({
         }
         if (!containerRect || (rangeRect.width === 0 && rangeRect.height === 0)) return;
 
-        const left = rangeRect.left + rangeRect.width / 2 - containerRect.left;
+        const anchorLeft = rangeRect.left + rangeRect.width / 2 - containerRect.left;
+        const left = getMenuLeftPosition({
+            anchorLeft,
+            containerWidth: containerRect.width,
+            menuWidth: SELECTION_MENU_ESTIMATED_WIDTH
+        });
         const anchorTop = rangeRect.top - containerRect.top;
         const anchorBottom = rangeRect.bottom - containerRect.top;
         const { top, placement } = getMenuTopPosition({
@@ -456,7 +479,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
 
         selectionRangeRef.current = range.cloneRange();
         selectionMenuTimestampRef.current = Date.now();
-        setHighlightMenuPosition({ left, top, anchorTop, anchorBottom, placement });
+        setHighlightMenuPosition({ left, anchorLeft, top, anchorTop, anchorBottom, placement });
 
     }, [containerElementRef, getChapterElement, isOptionMenuVisible, showTutorial]);
 
@@ -664,19 +687,26 @@ const Book = forwardRef<BookHandle, PageProps>(({
         const containerRect = containerElementRef.current?.getBoundingClientRect();
         if (!containerRect) return;
         const menuHeight = highlightMenuRef.current?.offsetHeight ?? SELECTION_MENU_ESTIMATED_HEIGHT;
+        const menuWidth = highlightMenuRef.current?.offsetWidth ?? SELECTION_MENU_ESTIMATED_WIDTH;
         const { top, placement } = getMenuTopPosition({
             anchorTop: highlightMenuPosition.anchorTop,
             anchorBottom: highlightMenuPosition.anchorBottom,
             containerHeight: containerRect.height,
             menuHeight
         });
+        const left = getMenuLeftPosition({
+            anchorLeft: highlightMenuPosition.anchorLeft,
+            containerWidth: containerRect.width,
+            menuWidth
+        });
         if (
+            Math.abs(left - highlightMenuPosition.left) > 0.5 ||
             Math.abs(top - highlightMenuPosition.top) > 0.5 ||
             placement !== highlightMenuPosition.placement
         ) {
             setHighlightMenuPosition((previous) => (
                 previous
-                    ? { ...previous, top, placement }
+                    ? { ...previous, left, top, placement }
                     : previous
             ));
         }
@@ -698,7 +728,12 @@ const Book = forwardRef<BookHandle, PageProps>(({
             const containerRect = containerElementRef.current?.getBoundingClientRect();
             const highlightRect = highlight.getBoundingClientRect();
             if (!containerRect) return;
-            const left = highlightRect.left + highlightRect.width / 2 - containerRect.left;
+            const anchorLeft = highlightRect.left + highlightRect.width / 2 - containerRect.left;
+            const left = getMenuLeftPosition({
+                anchorLeft,
+                containerWidth: containerRect.width,
+                menuWidth: ACTION_MENU_ESTIMATED_WIDTH
+            });
             const anchorTop = highlightRect.top - containerRect.top;
             const anchorBottom = highlightRect.bottom - containerRect.top;
             const { top, placement } = getMenuTopPosition({
@@ -707,7 +742,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
                 containerHeight: containerRect.height,
                 menuHeight: ACTION_MENU_ESTIMATED_HEIGHT
             });
-            setHighlightActionMenu({ id, left, top, anchorTop, anchorBottom, placement });
+            setHighlightActionMenu({ id, left, anchorLeft, top, anchorTop, anchorBottom, placement });
             window.getSelection()?.removeAllRanges();
         };
         container.addEventListener("click", handleHighlightClick);
@@ -719,19 +754,26 @@ const Book = forwardRef<BookHandle, PageProps>(({
         const containerRect = containerElementRef.current?.getBoundingClientRect();
         if (!containerRect) return;
         const menuHeight = highlightActionMenuRef.current?.offsetHeight ?? ACTION_MENU_ESTIMATED_HEIGHT;
+        const menuWidth = highlightActionMenuRef.current?.offsetWidth ?? ACTION_MENU_ESTIMATED_WIDTH;
         const { top, placement } = getMenuTopPosition({
             anchorTop: highlightActionMenu.anchorTop,
             anchorBottom: highlightActionMenu.anchorBottom,
             containerHeight: containerRect.height,
             menuHeight
         });
+        const left = getMenuLeftPosition({
+            anchorLeft: highlightActionMenu.anchorLeft,
+            containerWidth: containerRect.width,
+            menuWidth
+        });
         if (
+            Math.abs(left - highlightActionMenu.left) > 0.5 ||
             Math.abs(top - highlightActionMenu.top) > 0.5 ||
             placement !== highlightActionMenu.placement
         ) {
             setHighlightActionMenu((previous) => (
                 previous
-                    ? { ...previous, top, placement }
+                    ? { ...previous, left, top, placement }
                     : previous
             ));
         }

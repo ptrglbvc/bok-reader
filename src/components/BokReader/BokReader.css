@@ -16,6 +16,17 @@
     }
 }
 
+@keyframes highlight-fade-in-below {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 4px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
 @font-face {
     font-family: "Cormorant Garamond";
     font-style: normal;
@@ -193,6 +204,10 @@
         pointer-events: auto;
         opacity: 0;
         animation: highlight-fade-in 250ms ease-out forwards;
+    }
+
+    .highlight-action-menu[data-placement="below"] {
+        animation-name: highlight-fade-in-below;
     }
 
     .highlight-swatch-row {

@@ -12,7 +12,6 @@ import React, {
 } from "react";
 import usePage from "../hooks/usePage";
 import usePercentageRead from "../hooks/usePercentageRead";
-import usePersistentState from "../hooks/usePersistentState";
 import useNavigation from "../hooks/useNavigation";
 import PageNumber from "./PageNumber";
 import { calculatePageOfElement } from "../helpful_functions/calculatePageOfElement";
@@ -110,6 +109,7 @@ const BookContent = memo(
 interface PageProps {
     content: string;
     title: string;
+    bookId: string;
     setIsLoading: Dispatch<SetStateAction<boolean>>;
     fontSize: number;
     fontFamily: string;
@@ -135,6 +135,7 @@ const easeOutBack = (x: number): number => {
 const Book = forwardRef<BookHandle, PageProps>(({
     content,
     title,
+    bookId,
     setIsLoading,
     fontSize,
     sidePadding,
@@ -167,11 +168,11 @@ const Book = forwardRef<BookHandle, PageProps>(({
     const [percentRead, setPercentRead] = usePercentageRead(bookRef);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageCount, setPageCount] = useState(0);
-
-    const [savedProgress, setSavedProgress] = usePersistentState<number>(
-        `bok_progress_${title}`,
-        0
-    );
+    const skipProgressPersistRef = useRef(false);
+    const progressStorageKey = bookId ? `bok_progress_${bookId}` : "";
+    const legacyProgressStorageKey = title && title !== "Loading..."
+        ? `bok_progress_${title}`
+        : "";
 
     const percentReadRef = useRef(percentRead);
     const animationRef = useRef<number | null>(null);
@@ -189,12 +190,49 @@ const Book = forwardRef<BookHandle, PageProps>(({
     }, [percentRead]);
 
     useEffect(() => {
-        if (percentRead > 0) setSavedProgress(percentRead);
-    }, [percentRead, setSavedProgress]);
+        if (!progressStorageKey) return;
+        let restoredProgress = 0;
+
+        try {
+            const stored = localStorage.getItem(progressStorageKey);
+            if (stored !== null) {
+                const parsed = JSON.parse(stored);
+                if (typeof parsed === "number" && Number.isFinite(parsed)) {
+                    restoredProgress = Math.max(0, Math.min(1, parsed));
+                }
+            } else if (legacyProgressStorageKey) {
+                const legacyStored = localStorage.getItem(legacyProgressStorageKey);
+                if (legacyStored !== null) {
+                    const parsedLegacy = JSON.parse(legacyStored);
+                    if (typeof parsedLegacy === "number" && Number.isFinite(parsedLegacy)) {
+                        restoredProgress = Math.max(0, Math.min(1, parsedLegacy));
+                        localStorage.setItem(progressStorageKey, JSON.stringify(restoredProgress));
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn(`Error restoring progress for "${progressStorageKey}":`, error);
+        }
+
+        skipProgressPersistRef.current = true;
+        setPercentRead(restoredProgress);
+        const clearSkipTimer = setTimeout(() => {
+            skipProgressPersistRef.current = false;
+        }, 0);
+
+        return () => clearTimeout(clearSkipTimer);
+    }, [legacyProgressStorageKey, progressStorageKey, setPercentRead]);
 
     useEffect(() => {
-        if (savedProgress > 0) setPercentRead(savedProgress);
-    }, [savedProgress, setPercentRead]);
+        if (!progressStorageKey) return;
+        if (skipProgressPersistRef.current) return;
+
+        try {
+            localStorage.setItem(progressStorageKey, JSON.stringify(percentRead));
+        } catch (error) {
+            console.warn(`Error saving progress for "${progressStorageKey}":`, error);
+        }
+    }, [percentRead, progressStorageKey]);
 
 
     // --- ANIMATION & NAVIGATION LOGIC ---

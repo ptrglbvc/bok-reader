@@ -64,7 +64,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
     supportedFonts = [],
     themes = EMPTY_THEMES,
 }) => {
-    const { title, rawContent, toc, isLoading, error, loadEpub, setIsLoading } =
+    const { title, bookId, rawContent, toc, isLoading, error, loadEpub, setIsLoading } =
         useEpub();
 
     const allThemes = useMemo(() => {
@@ -90,32 +90,45 @@ export const BokReader: React.FC<BokReaderProps> = ({
     const [showTutorial, setShowTutorial] = useState(!tutorialShown);
 
     const effectiveTheme = (allThemes as { [key: string]: Theme })[theme] ? theme : "Amoled Dark";
+    const highlightsStorageKey = bookId ? `bok_highlights_${bookId}` : "";
+    const legacyHighlightsStorageKey = title && title !== "Loading..."
+        ? `bok_highlights_${title}`
+        : "";
 
     useEffect(() => {
-        if (!title || title === "Loading...") return;
-        const key = `bok_highlights_${title}`;
+        if (!highlightsStorageKey) return;
         try {
-            const stored = localStorage.getItem(key);
+            const stored = localStorage.getItem(highlightsStorageKey);
             if (stored) {
                 setHighlights(JSON.parse(stored));
-            } else {
-                setHighlights([]);
+                return;
             }
+
+            if (legacyHighlightsStorageKey) {
+                const legacyStored = localStorage.getItem(legacyHighlightsStorageKey);
+                if (legacyStored) {
+                    const parsedLegacy = JSON.parse(legacyStored);
+                    setHighlights(parsedLegacy);
+                    localStorage.setItem(highlightsStorageKey, JSON.stringify(parsedLegacy));
+                    return;
+                }
+            }
+
+            setHighlights([]);
         } catch (error) {
-            console.warn(`Error reading highlights for "${title}":`, error);
+            console.warn(`Error reading highlights for "${highlightsStorageKey}":`, error);
             setHighlights([]);
         }
-    }, [title]);
+    }, [highlightsStorageKey, legacyHighlightsStorageKey]);
 
     useEffect(() => {
-        if (!title || title === "Loading...") return;
-        const key = `bok_highlights_${title}`;
+        if (!highlightsStorageKey) return;
         try {
-            localStorage.setItem(key, JSON.stringify(highlights));
+            localStorage.setItem(highlightsStorageKey, JSON.stringify(highlights));
         } catch (error) {
-            console.warn(`Error saving highlights for "${title}":`, error);
+            console.warn(`Error saving highlights for "${highlightsStorageKey}":`, error);
         }
-    }, [highlights, title]);
+    }, [highlights, highlightsStorageKey]);
 
     const handleAddHighlight = (highlight: Highlight) => {
         setHighlights((prev) => [...prev, highlight]);
@@ -237,6 +250,7 @@ export const BokReader: React.FC<BokReaderProps> = ({
                         ref={bookComponentRef}
                         content={rawContent}
                         title={title}
+                        bookId={bookId}
                         setIsLoading={setIsLoading}
                         fontSize={fontSize}
                         sidePadding={sidePadding}

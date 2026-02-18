@@ -10,6 +10,72 @@ export type TocItem = {
 
 type BlobImages = { [key: string]: string };
 
+function normalizeMetadataValue(value: string | null | undefined): string {
+    if (!value) return "";
+    return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function getMetadataText(opf: Document, selector: string): string {
+    const element = opf.querySelector(selector);
+    return normalizeMetadataValue(element?.textContent);
+}
+
+function getCanonicalBookIdentity(opf: Document): string {
+    const packageElement = opf.querySelector("package");
+    const uniqueIdentifierId = packageElement?.getAttribute("unique-identifier")?.trim() ?? "";
+
+    const identifiers = Array.from(
+        opf.querySelectorAll("metadata > dc\\:identifier, metadata > identifier")
+    );
+
+    let identifier = "";
+    if (uniqueIdentifierId) {
+        const matchedIdentifier = identifiers.find((item) => item.getAttribute("id") === uniqueIdentifierId);
+        identifier = normalizeMetadataValue(matchedIdentifier?.textContent);
+    }
+
+    if (!identifier && identifiers.length > 0) {
+        identifier = normalizeMetadataValue(identifiers[0].textContent);
+    }
+
+    if (identifier) {
+        return `id=${identifier}`;
+    }
+
+    const title = getMetadataText(opf, "metadata > dc\\:title, metadata > title");
+    const creator = getMetadataText(opf, "metadata > dc\\:creator, metadata > creator");
+    const language = getMetadataText(opf, "metadata > dc\\:language, metadata > language");
+    const publisher = getMetadataText(opf, "metadata > dc\\:publisher, metadata > publisher");
+
+    const fallbackIdentity = `title=${title}|creator=${creator}|language=${language}|publisher=${publisher}`;
+    return fallbackIdentity === "title=|creator=|language=|publisher="
+        ? "unknown-book"
+        : fallbackIdentity;
+}
+
+async function hashToHex(input: string): Promise<string> {
+    if (globalThis.crypto?.subtle && typeof TextEncoder !== "undefined") {
+        const encoded = new TextEncoder().encode(input);
+        const digest = await globalThis.crypto.subtle.digest("SHA-256", encoded);
+        return Array.from(new Uint8Array(digest))
+            .map((byte) => byte.toString(16).padStart(2, "0"))
+            .join("");
+    }
+
+    // Fallback for environments without Web Crypto
+    let hash = 5381;
+    for (let i = 0; i < input.length; i += 1) {
+        hash = ((hash << 5) + hash) ^ input.charCodeAt(i);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+async function createBookId(opf: Document): Promise<string> {
+    const canonicalIdentity = getCanonicalBookIdentity(opf);
+    const hash = await hashToHex(canonicalIdentity);
+    return `bok_${hash.slice(0, 32)}`;
+}
+
 function resolvePath(base: string, relative: string) {
     const stack = base.split("/");
     stack.pop();
@@ -26,6 +92,7 @@ export default function useEpub() {
     const [rawContent, setRawContent] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [title, setTitle] = useState("");
+    const [bookId, setBookId] = useState("");
     const [toc, setToc] = useState<TocItem[]>([]); // 2. State for TOC
     const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +108,7 @@ export default function useEpub() {
             setRawContent("");
             setToc([]);
             setTitle("Loading...");
+            setBookId("");
             setError(null);
 
             if (styleLinkElement.current) {
@@ -98,6 +166,7 @@ export default function useEpub() {
         if (parsedOpf.querySelector("parsererror")) throw new Error("Error parsing OPF file.");
 
         getTitle(parsedOpf);
+        setBookId(await createBookId(parsedOpf));
         await parseManifestAndSpine(parsedOpf);
     }
 
@@ -429,5 +498,5 @@ export default function useEpub() {
         document.head.appendChild(styleLinkElement.current);
     }
 
-    return { title, rawContent, toc, isLoading, error, loadEpub, setIsLoading };
+    return { title, bookId, rawContent, toc, isLoading, error, loadEpub, setIsLoading };
 }

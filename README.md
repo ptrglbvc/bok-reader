@@ -27,9 +27,6 @@ function MyBookViewer() {
         <div style={{
             height: "100vh",
             width: "100vw",
-            // the --safari-is-stupid-width is here basically because safari needs some explicit pointers on how big the colums are in column view, instead of inferring like chrome and firefox.
-            // @ts-expect-error sorry ts, we need this stupid variable for stupid safari
-            --safari-is-stupid-width: "100vw"
         }}>
             <BokReader epubDataSource={epubUrl} />
         </div>

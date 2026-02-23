@@ -10,7 +10,7 @@ import "../src/style.css";
 
 function App() {
     const epubUrl =
-        "https://43ru4bvzl6.ufs.sh/f/7NUfZePLME3PYgjEwQBi3BkLgUlt1zNSyxXcsbWCT2RK0Iv8";
+        "https://43ru4bvzl6.ufs.sh/f/7NUfZePLME3PMnSWDPukmni4ZH3xrC18PNcw20Bs5begvd6F";
 
     const readerRef = useRef<BokReaderHandle>(null);
     const [syncState, setSyncState] = useState<BokReaderSyncState | null>(null);

@@ -15,8 +15,10 @@ export default function LoadingScreen({
                     : styles["loading-screen-gon"]
             }
         >
-            <div className={styles.spinner} >
-                <div className={styles.core}></div>
+            <div className={styles.book}>
+                <div className={styles.page}></div>
+                <div className={styles.page}></div>
+                <div className={styles.page}></div>
             </div>
         </div>
     );

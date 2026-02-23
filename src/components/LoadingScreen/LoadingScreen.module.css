@@ -10,117 +10,100 @@
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    will-change: opacity;
+    will-change: opacity, visibility;
 }
 
 .loading-screen {
     opacity: 1;
+    visibility: visible;
     transition: opacity 0.5s cubic-bezier(0.65, 0, 0.35, 1);
     pointer-events: all;
 }
 
 .loading-screen-gon {
     opacity: 0;
-    transition: opacity 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+    visibility: hidden;
+    transition: opacity 0.8s cubic-bezier(0.65, 0, 0.35, 1), visibility 0s linear 0.8s;
     pointer-events: none;
 }
 
-/*
-   THE REACTOR SPINNER
-*/
+.book {
+    --book-size: 110px;
+    --page-color: #7744aa;
+    --border-color: #9b63d6;
 
-.spinner {
-    --loader-size: 80px;
-
+    width: var(--book-size);
+    height: calc(var(--book-size) * 0.7);
     position: relative;
-    width: var(--loader-size);
-    height: var(--loader-size);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    perspective: 400px;
+    transform-style: preserve-3d;
 }
 
-/* Outer Ring - Slow & Steady */
-.spinner::before {
+/* Left side - Always solid */
+.book::before {
     content: "";
     position: absolute;
-    width: 100%;
+    width: 50%;
     height: 100%;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    border-top-color: var(--color-tint);
-    border-right-color: var(--color-tint);
-    border-bottom-color: transparent;
-
-    /* The glow */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0);
-
-    /* Cubic bezier for a "swinging" motion */
-    animation: spin-outer 2s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+    background-color: var(--page-color);
+    border-radius: 6px 0 0 6px;
+    opacity: 1;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
 }
 
-/* Inner Ring - Fast & Whippy */
-.spinner::after {
+/* Right side - Base */
+.book::after {
     content: "";
     position: absolute;
-    width: 70%;
-    height: 70%;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    border-bottom-color: var(--color-tint);
-    border-left-color: var(--color-tint);
-
-    /* Slightly brighter glow */
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0);
-
-    /* Reverse direction with different easing for organic chaos */
-    animation: spin-inner 1.2s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+    width: 50%;
+    height: 100%;
+    background-color: var(--page-color);
+    border-radius: 0 6px 6px 0;
+    right: 0;
+    opacity: 0.3;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
 }
 
-/* The Core Dot */
-.core {
-    width: 15%;
-    height: 15%;
-    background-color: var(--color-tint);
-    border-radius: 50%;
-    box-shadow: 0 0 15px var(--color-tint);
-    animation: pulse 1.5s ease-in-out infinite alternate;
+.page {
+    width: 50%;
+    height: 100%;
+    background-color: var(--page-color);
+    position: absolute;
+    right: 0;
+    transform-origin: left center;
+    border-radius: 0 6px 6px 0;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+    animation: page-turn 1.2s infinite ease-in-out;
 }
 
-/* Animations */
-@keyframes spin-outer {
+.page:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.page:nth-child(2) {
+    animation-delay: 0.4s;
+}
+
+.page:nth-child(3) {
+    animation-delay: 0.8s;
+}
+
+/* Dynamic z-index prevents border clipping */
+@keyframes page-turn {
     0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes spin-inner {
-    0% {
-        transform: rotate(0deg) scale(1);
+        transform: rotateY(0deg);
+        z-index: 1;
     }
 
     50% {
-        transform: rotate(-180deg) scale(0.9);
-    }
-
-    /* Shrink slightly */
-    100% {
-        transform: rotate(-360deg) scale(1);
-    }
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 0.3;
-        transform: scale(0.8);
+        z-index: 10;
     }
 
     100% {
-        opacity: 1;
-        transform: scale(1.1);
+        transform: rotateY(-180deg);
+        z-index: 1;
     }
 }

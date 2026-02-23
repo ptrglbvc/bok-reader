@@ -10,23 +10,18 @@
 
 .nav-menu {
     composes: panel from "../BottomSheetMenu/BottomSheetMenu.module.css";
-    --menu-bg: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
-    --menu-panel: color-mix(in srgb, var(--bg-color) 74%, #000 26%);
     --menu-border: color-mix(in srgb, var(--text-color) 28%, transparent);
     --menu-text: color-mix(in srgb, var(--text-color) 100%, #000 0%);
     --menu-muted: color-mix(in srgb, var(--text-color) 80%, transparent);
-    --menu-subtle: color-mix(in srgb, var(--bg-color) 65%, #000 35%);
     --menu-accent: color-mix(in srgb, var(--color-tint) 55%, transparent);
     
     height: 70vh; 
     
-    background: rgba(30, 30, 30, 0.95);
-    background: var(--menu-bg, rgba(30, 30, 30, 0.95));
+    background: var(--bg-color);
     
     border-radius: 24px;
     border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
     box-shadow: none;
-    
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -48,9 +43,9 @@
     padding: 20px;
     border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    background: var(--menu-subtle, rgba(0,0,0,0.2));
+    background: var(--bg-color);
 }
 
 .nav-header h2 {
@@ -59,16 +54,32 @@
     font-weight: 600;
 }
 
-.close-btn {
-    background: none;
-    border: none;
-    color: var(--menu-muted, rgba(255,255,255,0.7));
-    font-size: 1.5rem;
+.close-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    background: var(--bg-color);
+    border: solid 1px var(--menu-border);
+    border-radius: 50%;
+    font-size: 16px;
+    color: var(--text-color);
     cursor: pointer;
-    line-height: 1;
-    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transition: transform 0.2s ease, background 0.2s ease;
 }
-.close-btn:hover { color: var(--menu-text, white); }
+
+.close-button:hover {
+    background: color-mix(in srgb, var(--bg-color) 85%, #000 15%);
+    color: var(--menu-text, #fff);
+    transform: rotate(90deg) translateZ(0);
+}
 
 /* Scrollable TOC Area - add smooth scrolling */
 .toc-container {
@@ -102,7 +113,7 @@
 
 .toc-item:active {
     transform: scale(0.98);
-    background: color-mix(in srgb, var(--menu-panel) 85%, #000 15%);
+    background: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
 }
 
 .toc-page-num {
@@ -115,7 +126,7 @@
 .toc-sublist {
     list-style: none;
     padding: 0;
-    background: var(--menu-subtle, rgba(0,0,0,0.1));
+    background: var(--bg-color);
 }
 .toc-sublist .toc-item {
     padding-left: 40px;
@@ -124,7 +135,7 @@
 
 .page-jumper {
     padding: 20px;
-    background: var(--menu-subtle, rgba(0, 0, 0, 0.3));
+    background: var(--bg-color);
     border-top: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
     display: flex;
     flex-direction: column;
@@ -139,7 +150,7 @@
 }
 
 .jumper-input {
-    background: color-mix(in srgb, var(--menu-panel) 80%, #000 20%);
+    background: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
     border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
     color: var(--menu-text, white);
     border-radius: 8px;
@@ -168,7 +179,7 @@
 }
 
 .go-btn {
-    background: color-mix(in srgb, var(--menu-accent) 55%, var(--menu-bg) 45%);
+    background: color-mix(in srgb, var(--menu-accent) 55%, var(--bg-color) 45%);
     color: var(--menu-text, black);
     border: 1px solid color-mix(in srgb, var(--menu-accent) 65%, transparent);
     padding: 8px 24px;

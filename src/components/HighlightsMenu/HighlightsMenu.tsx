@@ -213,7 +213,13 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
             >
                 <div className={styles["highlights-header"]}>
                     <h2>Highlights</h2>
-                    <button className={styles["close-btn"]} onClick={closeMenu}>&times;</button>
+                    <button
+                        onClick={closeMenu}
+                        className={styles["close-button"]}
+                        aria-label="Close menu"
+                    >
+                        ✕
+                    </button>
                 </div>
 
                 <div className={styles["highlights-container"]}>

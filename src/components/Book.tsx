@@ -841,6 +841,22 @@ const Book = forwardRef<BookHandle, PageProps>(({
     }, [containerElementRef, highlightActionMenu]);
 
     useEffect(() => {
+        const container = bookRef.current;
+        if (!container) return;
+
+        const highlightSpans = container.querySelectorAll("span[data-highlight-id]");
+        highlightSpans.forEach((span) => span.classList.remove("bok-highlight--focused"));
+
+        if (!highlightActionMenu) return;
+
+        highlightSpans.forEach((span) => {
+            if (span.getAttribute("data-highlight-id") === highlightActionMenu.id) {
+                span.classList.add("bok-highlight--focused");
+            }
+        });
+    }, [highlightActionMenu, highlights]);
+
+    useEffect(() => {
         const handleDocumentClick = (event: MouseEvent) => {
             if (Date.now() < ignoreDocumentClickUntilRef.current) return;
             const target = event.target as HTMLElement;

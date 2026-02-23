@@ -11,10 +11,10 @@
 .options-menu {
     composes: panel from "../BottomSheetMenu/BottomSheetMenu.module.css";
     --sheet-max-width: 400px;
-    --menu-bg: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
+
+    --menu-bg: color-mix(in srgb, var(--bg-color) 85%, var(--text-color) 15%);
+    --menu-text: color-mix(in srgb, var(--text-color) 85%, var(--bg-color) 15%);
     --menu-border: color-mix(in srgb, var(--text-color) 28%, transparent);
-    --menu-text: color-mix(in srgb, var(--text-color) 100%, #000 0%);
-    --menu-muted: color-mix(in srgb, var(--text-color) 75%, transparent);
     --menu-accent: color-mix(in srgb, var(--color-tint) 55%, transparent);
 
     background: rgba(30, 30, 30, 0.95);
@@ -79,7 +79,7 @@
 }
 
 .close-button:hover {
-    background: color-mix(in srgb, var(--bg-color) 85%, #000 15%);
+    background: var(--menu-bg);
     color: var(--menu-text, #fff);
     transform: rotate(90deg) translateZ(0);
 }
@@ -136,12 +136,16 @@
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     transform: translateZ(0);
-    transition: transform 0.1s ease, background-color 0.15s ease;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .stepper-button:active {
     transform: scale(0.92) translateZ(0);
-    background-color: color-mix(in srgb, var(--bg-color) 90%, #000 10%);
+    background-color: var(--menu-bg);
+}
+
+.stepper-button:hover {
+    background-color: var(--menu-bg);
 }
 
 .option-value {
@@ -181,27 +185,23 @@
     cursor: pointer;
     appearance: none;
     font-size: 0.9rem;
-    transition: background 0.15s ease;
+    transition: background 0.2s ease;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 
     /* Custom dropdown arrow */
     background-image:
-        linear-gradient(
-            45deg,
+        linear-gradient(45deg,
             transparent 41%,
             var(--menu-text, #fff) 41%,
             var(--menu-text, #fff) 59%,
-            transparent 59%
-        ),
-        linear-gradient(
-            135deg,
+            transparent 59%),
+        linear-gradient(135deg,
             transparent 41%,
             var(--menu-text, #fff) 41%,
             var(--menu-text, #fff) 59%,
-            transparent 59%
-        );
+            transparent 59%);
     background-repeat: no-repeat;
     background-position:
         right 14px top 50%,
@@ -210,11 +210,11 @@
 }
 
 .select:hover {
-    background-color: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
+    background-color: var(--menu-bg);
 }
 
 .select:active {
-    background-color: color-mix(in srgb, var(--bg-color) 94%, #000 6%);
+    background-color: var(--menu-bg);
 }
 
 /* Fullscreen button */
@@ -239,12 +239,16 @@
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     transform: translateZ(0);
-    transition: transform 0.1s ease, background-color 0.15s ease;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .fullscreen-button:active {
     transform: scale(0.98) translateZ(0);
-    background-color: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
+    background-color: var(--menu-bg);
+}
+
+.fullscreen-button:hover {
+    background-color: var(--menu-bg);
 }
 
 /* Custom scrollbar */

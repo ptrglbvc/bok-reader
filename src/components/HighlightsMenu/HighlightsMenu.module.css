@@ -8,6 +8,7 @@
 
 .highlights-menu {
     composes: panel from "../BottomSheetMenu/BottomSheetMenu.module.css";
+    --menu-bg: color-mix(in srgb, var(--bg-color) 85%, var(--text-color) 15%);
     --menu-border: color-mix(in srgb, var(--text-color) 28%, transparent);
     --menu-text: color-mix(in srgb, var(--text-color) 100%, #000 0%);
     --menu-muted: color-mix(in srgb, var(--text-color) 80%, transparent);
@@ -77,7 +78,7 @@
 }
 
 .close-button:hover {
-    background: color-mix(in srgb, var(--bg-color) 85%, #000 15%);
+    background: var(--menu-bg);
     color: var(--menu-text, #fff);
     transform: rotate(90deg) translateZ(0);
 }
@@ -109,12 +110,20 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    transition: transform 0.15s ease;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.highlight-row:hover {
+    background-color: var(--menu-bg);
+}
+
+.highlight-item:hover .highlight-row {
+    background-color: var(--menu-bg);
 }
 
 .highlight-row:active {
     transform: scale(0.98);
-    background: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
+    background: var(--menu-bg);
 }
 
 .highlight-label {
@@ -178,6 +187,12 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    background: var(--bg-color);
+    transition: background-color 0.2s ease;
+}
+
+.highlight-item:hover .highlight-actions {
+    background-color: var(--menu-bg);
 }
 
 .highlight-swatch-row {

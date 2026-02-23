@@ -121,7 +121,6 @@
         padding-left: calc(var(--side-padding) + env(safe-area-inset-left));
 
         height: 100%;
-        text-shadow: 0 1px 2px var(--bg-color);
         font-size: var(--font-size);
 
         column-gap: calc(2 * var(--side-padding));
@@ -155,23 +154,39 @@
         -webkit-box-decoration-break: clone;
         border-radius: 0.12em;
         cursor: pointer;
+        transition: background-color 0.2s ease;
     }
 
     .bok-highlight--yellow {
-        background-color: rgba(255, 235, 59, 0.5);
+        background-color: rgba(255, 235, 59, 0.35);
+    }
+
+    .bok-highlight--yellow.bok-highlight--focused {
+        background-color: rgba(255, 235, 59, 0.55);
     }
 
     .bok-highlight--red {
-        background-color: rgba(255, 99, 71, 0.5);
+        background-color: rgba(255, 99, 71, 0.35);
+    }
+
+    .bok-highlight--red.bok-highlight--focused {
+        background-color: rgba(255, 99, 71, 0.55);
     }
 
     .bok-highlight--blue {
-        background-color: rgba(79, 195, 247, 0.5);
+        background-color: rgba(79, 195, 247, 0.35);
+    }
+
+    .bok-highlight--blue.bok-highlight--focused {
+        background-color: rgba(79, 195, 247, 0.55);
     }
 
     .bok-highlight--purple {
-        background-color: rgba(204, 153, 255, 0.5);
-        background-color: color-mix(in srgb, var(--color-tint) 50%, transparent);
+        background-color: rgba(204, 153, 255, 0.35);
+    }
+
+    .bok-highlight--purple.bok-highlight--focused {
+        background-color: rgba(204, 153, 255, 0.55);
     }
 
     .highlight-menu {
@@ -487,16 +502,11 @@
 }
 
 @media (pointer: coarse) {
-    .bok-reader-container {
-        .book-page {
-            text-shadow: none;
-        }
 
-        .highlight-menu,
-        .highlight-action-menu,
-        .page-number {
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-        }
+    .bok-reader-container .highlight-menu,
+    .highlight-action-menu,
+    .page-number {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
 }

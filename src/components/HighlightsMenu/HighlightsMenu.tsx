@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import styles from "./HighlightsMenu.module.css";
 import { Highlight, HighlightColor } from "../Book";
 import { calculatePageOfElement } from "../../helpful_functions/calculatePageOfElement";
+import useBottomMenuAnimation from "../../hooks/useBottomMenuAnimation";
 import Toast from "../Toast/Toast";
 
 interface HighlightsMenuProps {
@@ -21,20 +22,11 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
     onRemoveHighlight,
     onUpdateHighlightColor
 }) => {
-    const [isVisible, setIsVisible] = useState(false);
-    const [isClosing, setIsClosing] = useState(false);
+    const { isVisible, isClosing, closeMenu } = useBottomMenuAnimation(onClose);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [pageMap, setPageMap] = useState<{ [id: string]: number }>({});
     const [isCopyToastVisible, setIsCopyToastVisible] = useState(false);
     const copyToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(() => {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                setIsVisible(true);
-            });
-        });
-    }, []);
 
     useEffect(() => {
         const newPageMap: { [id: string]: number } = {};
@@ -63,14 +55,6 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
         };
     }, []);
 
-    const handleClose = useCallback(() => {
-        requestAnimationFrame(() => {
-            setIsVisible(false);
-            setIsClosing(true);
-        });
-        setTimeout(onClose, 350);
-    }, [onClose]);
-
     const handleGoToHighlight = useCallback((highlight: Highlight) => {
         try {
             const span = document.querySelector(`span[data-highlight-id="${highlight.id}"]`);
@@ -82,8 +66,8 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
         } catch {
             // ignore
         }
-        handleClose();
-    }, [handleClose, onGoToPage]);
+        closeMenu();
+    }, [closeMenu, onGoToPage]);
 
     const handleToggleActions = (event: React.MouseEvent, id: string) => {
         event.stopPropagation();
@@ -217,7 +201,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
     return (
         <div
             className={`${styles["highlights-overlay"]} ${isClosing ? styles["fade-out"] : ""}`}
-            onClick={handleClose}
+            onClick={closeMenu}
         >
             <div
                 className={`
@@ -229,7 +213,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
             >
                 <div className={styles["highlights-header"]}>
                     <h2>Highlights</h2>
-                    <button className={styles["close-btn"]} onClick={handleClose}>&times;</button>
+                    <button className={styles["close-btn"]} onClick={closeMenu}>&times;</button>
                 </div>
 
                 <div className={styles["highlights-container"]}>

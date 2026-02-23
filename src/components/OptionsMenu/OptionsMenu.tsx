@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import toggleFullscreen from "../../helpful_functions/toggleFullscreen";
+import useBottomMenuAnimation from "../../hooks/useBottomMenuAnimation";
 import styles from "./OptionsMenu.module.css";
 import { Theme } from "../BokReader/BokReader.tsx";
 
@@ -30,8 +31,7 @@ function OptionsMenu({
     supportedFonts = [],
     allThemes
 }: OptionsMenuProps) {
-    const [isClosing, setIsClosing] = useState(false);
-    const [isVisible, setIsVisible] = useState(false);
+    const { isVisible, isClosing, closeMenu } = useBottomMenuAnimation(onClose);
 
     const fontValueRef = useRef<HTMLSpanElement>(null);
     const paddingValueRef = useRef<HTMLSpanElement>(null);
@@ -46,28 +46,9 @@ function OptionsMenu({
 
     const allThemesArray = Object.keys(allThemes)
 
-    // Double rAF for smoother mount animation
-    useEffect(() => {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                setIsVisible(true);
-            });
-        });
-    }, []);
-
-    const handleClose = useCallback(() => {
-        requestAnimationFrame(() => {
-            setIsVisible(false);
-            setIsClosing(true);
-        });
-
-        // Match CSS transition duration (350ms)
-        setTimeout(onClose, 350);
-    }, [onClose]);
-
     const handleOverlayClick = useCallback(() => {
-        handleClose();
-    }, [handleClose]);
+        closeMenu();
+    }, [closeMenu]);
 
     const handleMenuClick = useCallback((event: React.MouseEvent) => {
         event.stopPropagation();
@@ -133,7 +114,7 @@ function OptionsMenu({
                 onClick={handleMenuClick}
             >
                 <button
-                    onClick={handleClose}
+                    onClick={closeMenu}
                     className={styles['close-button']}
                     aria-label="Close menu"
                 >

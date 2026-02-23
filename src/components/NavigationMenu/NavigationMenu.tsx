@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { TocItem } from "../../hooks/useEpub";
 import { calculatePageOfElement } from "../../helpful_functions/calculatePageOfElement";
+import useBottomMenuAnimation from "../../hooks/useBottomMenuAnimation";
 import styles from "./NavigationMenu.module.css";
 
 interface NavigationMenuProps {
@@ -20,20 +21,9 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     onGoToPage,
     onChapterClick
 }) => {
-    const [isVisible, setIsVisible] = useState(false);
-    const [isClosing, setIsClosing] = useState(false);
+    const { isVisible, isClosing, closeMenu } = useBottomMenuAnimation(onClose);
     const [inputPage, setInputPage] = useState(currentPage + 1);
     const [pageMap, setPageMap] = useState<{[href: string]: number}>({});
-
-    // Use rAF for smoother mount animation
-    useEffect(() => {
-        // Double rAF ensures the browser has painted the initial state
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                setIsVisible(true);
-            });
-        });
-    }, []);
 
     useEffect(() => {
         const newPageMap: {[href: string]: number} = {};
@@ -70,17 +60,6 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         setInputPage(currentPage + 1);
     }, [currentPage]);
 
-    const handleClose = useCallback(() => {
-        // Use rAF for smoother close animation
-        requestAnimationFrame(() => {
-            setIsVisible(false);
-            setIsClosing(true);
-        });
-        
-        // Match CSS transition duration (350ms)
-        setTimeout(onClose, 350);
-    }, [onClose]);
-
     const handleJump = useCallback(() => {
         const target = Math.max(1, Math.min(totalPages, inputPage));
         onGoToPage(target - 1);
@@ -88,8 +67,8 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
 
     const handleChapterClick = useCallback((href: string) => {
         onChapterClick(href);
-        handleClose();
-    }, [onChapterClick, handleClose]);
+        closeMenu();
+    }, [closeMenu, onChapterClick]);
 
     const renderToc = (items: TocItem[], level = 0) => {
         return (
@@ -118,7 +97,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     return (
         <div 
             className={`${styles['nav-menu-overlay']} ${isClosing ? styles['fade-out'] : ''}`} 
-            onClick={handleClose}
+            onClick={closeMenu}
         >
             <div 
                 className={`
@@ -130,7 +109,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
             >
                 <div className={styles['nav-header']}>
                     <h2>Table of Contents</h2>
-                    <button className={styles['close-btn']} onClick={handleClose}>&times;</button>
+                    <button className={styles['close-btn']} onClick={closeMenu}>&times;</button>
                 </div>
 
                 <div className={styles['toc-container']}>

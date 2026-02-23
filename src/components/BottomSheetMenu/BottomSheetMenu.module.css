@@ -1,0 +1,80 @@
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    overflow: hidden;
+    background-color: transparent;
+    opacity: 1;
+    transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: opacity;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+.overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    background-color: color-mix(in srgb, var(--bg-color) 40%, transparent 60%);
+    background-image:
+        radial-gradient(var(--sheet-noise-light, rgba(255, 255, 255, 0.18)) 0.6px, transparent 0.6px),
+        radial-gradient(var(--sheet-noise-dark, rgba(0, 0, 0, 0.14)) 0.6px, transparent 0.6px);
+    background-size: 2.6px 2.6px, 4px 4px;
+    background-position: 0 0, 1px 1px;
+    animation: menu-noise-fade-in 220ms ease-out forwards;
+}
+
+.overlayFadeOut {
+    opacity: 0;
+}
+
+.overlayFadeOut::before {
+    opacity: 0;
+    animation: none;
+}
+
+.panel {
+    position: absolute;
+    bottom: var(--sheet-bottom, 20px);
+    left: var(--sheet-left, 50%);
+    right: var(--sheet-right, auto);
+    width: var(--sheet-width, calc(100% - 40px));
+    max-width: var(--sheet-max-width, 500px);
+    opacity: 0;
+    will-change: transform, opacity;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: var(--sheet-transform-closed, translateX(-50%) translateY(120%) translateZ(0));
+    transform: var(--sheet-transform-closed, translateX(-50%) translateY(120%) translateZ(0));
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+                opacity 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.panelVisible {
+    -webkit-transform: var(--sheet-transform-open, translateX(-50%) translateY(0) translateZ(0));
+    transform: var(--sheet-transform-open, translateX(-50%) translateY(0) translateZ(0));
+    opacity: 1;
+}
+
+.panelSlideDown {
+    -webkit-transform: var(--sheet-transform-closed, translateX(-50%) translateY(120%) translateZ(0));
+    transform: var(--sheet-transform-closed, translateX(-50%) translateY(120%) translateZ(0));
+    opacity: 0;
+}
+
+@keyframes menu-noise-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

@@ -1,38 +1,16 @@
 .options-menu-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.3);
-    background-color: color-mix(in srgb, var(--bg-color) 15%, transparent 85%);
-    z-index: 9999;
+    composes: overlay from "../BottomSheetMenu/BottomSheetMenu.module.css";
     container-type: size;
     container-name: options-overlay;
-    overflow: hidden;
-    
-    /* GPU acceleration */
-    will-change: opacity;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-    
-    /* Static blur - animate only opacity for the sweet sweet gpu acceleration*/
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    
-    opacity: 1;
-    transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-.options-menu-overlay.fade-out {
-    opacity: 0;
+.fade-out {
+    composes: overlayFadeOut from "../BottomSheetMenu/BottomSheetMenu.module.css";
 }
 
 .options-menu {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
+    composes: panel from "../BottomSheetMenu/BottomSheetMenu.module.css";
+    --sheet-max-width: 400px;
     --menu-bg: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
     --menu-panel: color-mix(in srgb, var(--bg-color) 72%, #000 28%);
     --menu-border: color-mix(in srgb, var(--text-color) 28%, transparent);
@@ -41,12 +19,8 @@
     --menu-muted: color-mix(in srgb, var(--text-color) 75%, transparent);
     --menu-accent: color-mix(in srgb, var(--color-tint) 55%, transparent);
     
-    width: calc(100% - 40px);
-    max-width: 400px;
     background: rgba(30, 30, 30, 0.95);
     background: var(--menu-bg, rgba(30, 30, 30, 0.95));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     padding: 24px;
     box-sizing: border-box;
     border-radius: 24px;
@@ -55,48 +29,22 @@
     max-height: 80%;
     overflow-y: auto;
     box-shadow: none;
-    
-    /* GPU acceleration */
-    will-change: transform, opacity;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    -webkit-transform: translateX(-50%) translateY(120%) translateZ(0);
-    transform: translateX(-50%) translateY(120%) translateZ(0);
-    
-    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-                opacity 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-    
-    opacity: 0;
 }
 
-.options-menu.visible {
-    -webkit-transform: translateX(-50%) translateY(0) translateZ(0);
-    transform: translateX(-50%) translateY(0) translateZ(0);
-    opacity: 1;
+.visible {
+    composes: panelVisible from "../BottomSheetMenu/BottomSheetMenu.module.css";
 }
 
-.options-menu.slide-down {
-    -webkit-transform: translateX(-50%) translateY(120%) translateZ(0);
-    transform: translateX(-50%) translateY(120%) translateZ(0);
-    opacity: 0;
+.slide-down {
+    composes: panelSlideDown from "../BottomSheetMenu/BottomSheetMenu.module.css";
 }
 
 @media (min-width: 768px) {
     .options-menu {
-        left: auto;
-        right: 20px;  
-        -webkit-transform: translateY(120%) translateZ(0);
-        transform: translateY(120%) translateZ(0);
-    }
-
-    .options-menu.visible {
-        -webkit-transform: translateY(0) translateZ(0);
-        transform: translateY(0) translateZ(0);
-    }
-
-    .options-menu.slide-down {
-        -webkit-transform: translateY(120%) translateZ(0);
-        transform: translateY(120%) translateZ(0);
+        --sheet-left: auto;
+        --sheet-right: 20px;
+        --sheet-transform-closed: translateY(120%) translateZ(0);
+        --sheet-transform-open: translateY(0) translateZ(0);
     }
 }
 

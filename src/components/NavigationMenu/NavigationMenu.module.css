@@ -1,37 +1,15 @@
 .nav-menu-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.3);
-    background-color: color-mix(in srgb, var(--bg-color) 15%, transparent 85%);
-    z-index: 9999;
-    
-    /* GPU acceleration */
-    will-change: opacity;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-    
-    /* Animate opacity only - backdrop-filter is static now */
-    opacity: 1;
-    transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-    
-    /* Static blur - no animation */
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    composes: overlay from "../BottomSheetMenu/BottomSheetMenu.module.css";
+    --sheet-noise-light: rgba(255, 255, 255, 0.18);
+    --sheet-noise-dark: rgba(0, 0, 0, 0.14);
 }
 
-.nav-menu-overlay.fade-out {
-    opacity: 0;
-    /* Don't animate backdrop-filter - just hide with opacity */
+.fade-out {
+    composes: overlayFadeOut from "../BottomSheetMenu/BottomSheetMenu.module.css";
 }
 
 .nav-menu {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
+    composes: panel from "../BottomSheetMenu/BottomSheetMenu.module.css";
     --menu-bg: color-mix(in srgb, var(--bg-color) 88%, #000 12%);
     --menu-panel: color-mix(in srgb, var(--bg-color) 74%, #000 26%);
     --menu-border: color-mix(in srgb, var(--text-color) 28%, transparent);
@@ -40,14 +18,10 @@
     --menu-subtle: color-mix(in srgb, var(--bg-color) 65%, #000 35%);
     --menu-accent: color-mix(in srgb, var(--color-tint) 55%, transparent);
     
-    width: calc(100% - 40px);
-    max-width: 500px; 
     height: 70vh; 
     
     background: rgba(30, 30, 30, 0.95);
     background: var(--menu-bg, rgba(30, 30, 30, 0.95));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     
     border-radius: 24px;
     border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
@@ -57,31 +31,14 @@
     flex-direction: column;
     overflow: hidden;
     color: var(--menu-text, white);
-    
-    /* GPU acceleration - CRITICAL for smooth animation */
-    will-change: transform, opacity;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    -webkit-transform: translateX(-50%) translateY(120%) translateZ(0);
-    transform: translateX(-50%) translateY(120%) translateZ(0);
-    
-    /* Slightly faster, snappier timing */
-    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-                opacity 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-    
-    opacity: 0;
 }
 
-.nav-menu.visible {
-    -webkit-transform: translateX(-50%) translateY(0) translateZ(0);
-    transform: translateX(-50%) translateY(0) translateZ(0);
-    opacity: 1;
+.visible {
+    composes: panelVisible from "../BottomSheetMenu/BottomSheetMenu.module.css";
 }
 
-.nav-menu.slide-down {
-    -webkit-transform: translateX(-50%) translateY(120%) translateZ(0);
-    transform: translateX(-50%) translateY(120%) translateZ(0);
-    opacity: 0;
+.slide-down {
+    composes: panelSlideDown from "../BottomSheetMenu/BottomSheetMenu.module.css";
 }
 
 /* Rest of your styles remain the same... */

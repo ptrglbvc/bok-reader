@@ -157,7 +157,9 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     const [activeMenu, setActiveMenu] = useState<"none" | "options" | "navigation" | "highlights">("none");
 
     const [sidePadding, setSidePadding] = usePersistentState<number>("bok_global_side_padding", 20);
+    const [topPadding, setTopPadding] = usePersistentState<number>("bok_global_top_padding", 30);
     const [fontSize, setFontSize] = usePersistentState<number>("bok_global_fontsize", 1.4);
+    const [lineHeight, setLineHeight] = usePersistentState<number>("bok_global_line_height", 1.5);
     const [fontFamily, setFontFamily] = usePersistentState<string>("bok_global_font_family", defaultFontFamily);
     const [theme, setTheme] = usePersistentState<string>("bok_global_theme", "Amoled Dark");
 
@@ -178,6 +180,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     const lastProgressSyncEventRef = useRef<number | null>(null);
     const hasObservedProgressRef = useRef(false);
     const pendingSyncEventsRef = useRef<Map<string, BokReaderSyncEvent>>(new Map());
+    const pendingHighlightRemovalTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
     const queuedSyncStateRef = useRef<BokReaderSyncState | null>(null);
     const processedSyncStatesRef = useRef<Set<string>>(new Set());
     const lastConflictFingerprintRef = useRef("");
@@ -388,6 +391,8 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
 
     useEffect(() => {
         pendingSyncEventsRef.current.clear();
+        pendingHighlightRemovalTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+        pendingHighlightRemovalTimersRef.current.clear();
         processedSyncStatesRef.current.clear();
         lastConflictFingerprintRef.current = "";
         queuedSyncStateRef.current = null;
@@ -411,17 +416,38 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     }, [bookId, emitSyncEvent]);
 
     const handleRemoveHighlight = useCallback((id: string) => {
-        setHighlights((prev) => prev.filter((highlight) => highlight.id !== id));
+        if (pendingHighlightRemovalTimersRef.current.has(id)) return;
 
-        if (!bookId || suppressSyncEmissionRef.current > 0) return;
+        const finalizeRemoval = () => {
+            pendingHighlightRemovalTimersRef.current.delete(id);
+            setHighlights((prev) => prev.filter((highlight) => highlight.id !== id));
 
-        emitSyncEvent({
-            type: "highlight.remove",
-            mutationId: createMutationId("hl_remove"),
-            bookId,
-            emittedAt: Date.now(),
-            highlightId: id
+            if (!bookId || suppressSyncEmissionRef.current > 0) return;
+
+            emitSyncEvent({
+                type: "highlight.remove",
+                mutationId: createMutationId("hl_remove"),
+                bookId,
+                emittedAt: Date.now(),
+                highlightId: id
+            });
+        };
+
+        const highlightSpans = Array.from(
+            bokReaderWrapperRef.current?.querySelectorAll("span[data-highlight-id]") ?? []
+        ).filter((span) => span.getAttribute("data-highlight-id") === id);
+
+        if (highlightSpans.length === 0) {
+            finalizeRemoval();
+            return;
+        }
+
+        highlightSpans.forEach((span) => {
+            span.classList.add("bok-highlight--removing");
         });
+
+        const timerId = setTimeout(finalizeRemoval, 300);
+        pendingHighlightRemovalTimersRef.current.set(id, timerId);
     }, [bookId, emitSyncEvent]);
 
     const handleUpdateHighlightColor = useCallback((id: string, color: Highlight["color"]) => {
@@ -528,13 +554,14 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     const dynamicCssVariables = useMemo(
         () => ({
             "--side-padding": `${sidePadding}px`,
-            "--top-padding": "30px",
+            "--top-padding": `${topPadding}px`,
             "--bottom-padding": "70px",
             "--font-size": `${fontSize}em`,
+            "--line-height": `${lineHeight}`,
             "--font-family": fontFamily,
             ...(allThemes as { [key: string]: Theme })[effectiveTheme]
         }),
-        [sidePadding, fontSize, fontFamily, allThemes, effectiveTheme],
+        [sidePadding, topPadding, fontSize, lineHeight, fontFamily, allThemes, effectiveTheme],
     );
 
     if (error && !isLoading && !rawContent) {
@@ -572,6 +599,8 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                         bookId={bookId}
                         setIsLoading={setIsLoading}
                         fontSize={fontSize}
+                        lineHeight={lineHeight}
+                        topPadding={topPadding}
                         sidePadding={sidePadding}
                         fontFamily={fontFamily}
                         isOptionMenuVisible={activeMenu !== "none"}
@@ -590,11 +619,15 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                         <OptionsMenu
                             onClose={() => setActiveMenu("none")}
                             fontSize={fontSize}
+                            lineHeight={lineHeight}
+                            topPadding={topPadding}
                             padding={sidePadding}
                             fontFamily={fontFamily}
                             theme={theme}
+                            setTopPadding={setTopPadding}
                             setPadding={setSidePadding}
                             setFontSize={setFontSize}
+                            setLineHeight={setLineHeight}
                             setFontFamily={setFontFamily}
                             setTheme={setTheme}
                             allThemes={allThemes}

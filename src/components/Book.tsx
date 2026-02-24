@@ -114,6 +114,8 @@ interface PageProps {
     bookId: string;
     setIsLoading: Dispatch<SetStateAction<boolean>>;
     fontSize: number;
+    lineHeight: number;
+    topPadding: number;
     fontFamily: string;
     sidePadding: number;
     showTutorial: boolean;
@@ -141,6 +143,8 @@ const Book = forwardRef<BookHandle, PageProps>(({
     bookId,
     setIsLoading,
     fontSize,
+    lineHeight,
+    topPadding,
     sidePadding,
     fontFamily,
     isOptionMenuVisible,
@@ -909,7 +913,9 @@ const Book = forwardRef<BookHandle, PageProps>(({
         setIsLoading(true);
         const timer = setTimeout(() => {
             currentBookRef.style.setProperty("--side-padding", `${sidePadding}px`);
+            currentBookRef.style.setProperty("--top-padding", `${topPadding}px`);
             currentBookRef.style.setProperty("--font-size", `${fontSize}em`);
+            currentBookRef.style.setProperty("--line-height", String(lineHeight));
             currentBookRef.style.setProperty("--font-family", fontFamily);
             currentBookRef.style.setProperty("--computed-width", `${pageWidth}px`);
             currentBookRef.style.maxHeight = `${pageHeight}px`;
@@ -942,7 +948,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
             clearTimeout(timer);
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
         };
-    }, [pageWidth, pageHeight, sidePadding, fontSize, fontFamily, noOfPages, content, title, setIsLoading]);
+    }, [pageWidth, pageHeight, sidePadding, topPadding, fontSize, lineHeight, fontFamily, noOfPages, content, title, setIsLoading]);
 
 
     useEffect(() => {

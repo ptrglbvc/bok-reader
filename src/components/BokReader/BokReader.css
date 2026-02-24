@@ -110,6 +110,7 @@
 
         height: 100%;
         font-size: var(--font-size);
+        line-height: var(--line-height, 1.5);
 
         column-gap: calc(2 * var(--side-padding));
         column-fill: auto;
@@ -142,39 +143,43 @@
         -webkit-box-decoration-break: clone;
         border-radius: 0.12em;
         cursor: pointer;
-        transition: background-color 0.2s ease;
+        transition: background-color 0.3s ease;
+    }
+
+    .bok-highlight--removing {
+        background-color: transparent !important;
     }
 
     .bok-highlight--yellow {
-        background-color: rgba(255, 235, 59, 0.35);
+        background-color: color-mix(in srgb, #ffeb3b 34%, var(--bg-color) 66%);
     }
 
     .bok-highlight--yellow.bok-highlight--focused {
-        background-color: rgba(255, 235, 59, 0.55);
+        background-color: color-mix(in srgb, #ffeb3b 55%, var(--bg-color) 45%);
     }
 
     .bok-highlight--red {
-        background-color: rgba(255, 99, 71, 0.35);
+        background-color: color-mix(in srgb, #ff6347 34%, var(--bg-color) 66%);
     }
 
     .bok-highlight--red.bok-highlight--focused {
-        background-color: rgba(255, 99, 71, 0.55);
+        background-color: color-mix(in srgb, #ff6347 55%, var(--bg-color) 45%);
     }
 
     .bok-highlight--blue {
-        background-color: rgba(79, 195, 247, 0.35);
+        background-color: color-mix(in srgb, #4fc3f7 34%, var(--bg-color) 66%);
     }
 
     .bok-highlight--blue.bok-highlight--focused {
-        background-color: rgba(79, 195, 247, 0.55);
+        background-color: color-mix(in srgb, #4fc3f7 55%, var(--bg-color) 45%);
     }
 
     .bok-highlight--purple {
-        background-color: rgba(204, 153, 255, 0.35);
+        background-color: color-mix(in srgb, var(--color-tint) 34%, var(--bg-color) 66%);
     }
 
     .bok-highlight--purple.bok-highlight--focused {
-        background-color: rgba(204, 153, 255, 0.55);
+        background-color: color-mix(in srgb, var(--color-tint) 55%, var(--bg-color) 45%);
     }
 
     .highlight-menu {

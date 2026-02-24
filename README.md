@@ -2,7 +2,7 @@
 
 A React component library for reading EPUB files. Built with React, TypeScript, and Vite.
 
-The reader that is spawned will render a column view, with each column representing a page of the book. The user is able to change the font size, font family, side margin and toggle the reader in fullscreen.
+The reader that is spawned will render a column view, with each column representing a page of the book. The user is able to change the font size, font family, line spacing, top padding, side margin and toggle the reader in fullscreen.
 
 Butt.
 

@@ -5,9 +5,9 @@
     --dropdown-accent: var(--menu-accent, color-mix(in srgb, var(--color-tint, #4facfe) 55%, transparent));
     --dropdown-bg: var(--menu-bg, color-mix(in srgb, var(--dropdown-surface) 85%, var(--dropdown-text) 15%));
 
-    width: 142px;
-    min-width: 122px;
-    max-width: 52%;
+    width: 136px;
+    min-width: 136px;
+    max-width: 136px;
     min-inline-size: 0;
     position: relative;
     flex-shrink: 0;

@@ -112,7 +112,7 @@ interface BokReaderProps {
 
 const BUILTIN_THEMES: { [key: string]: Theme } = {
     "Da Vinci": {
-        "--bg-color": "#dccba3",
+        "--bg-color": "#e2d2ad",
         "--text-color": "#463425",
         "--page-num-text": "#2b1f15",
         "--page-num-bg": "rgba(70, 52, 37, 0.1)",

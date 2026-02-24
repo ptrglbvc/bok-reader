@@ -46,6 +46,7 @@ export default MyBookViewer;
 -   `syncState?`: `BokReaderSyncState | null` - Host-provided remote/hydrated state for the current `bookId`.
 -   `onConflictDetected?`: `(conflict: BokReaderSyncConflict) => void` - Called when incoming `syncState` conflicts with non-empty local data and `forceApply` is not set.
 -   `supportedFonts?`: `{ displayName: string; name: string }[]` - Array of custom fonts to make available in the options menu.
+-   `defaultFontFamily?`: `string` - Default reader font family used only when `bok_global_font_family` is not already set in localStorage (falls back to `"Courier New"`).
 -   `color?`: `string` - Hexadecimal value. Color tint of the component.
 -   `style?`: `React.CSSProperties` - Optional inline styles for the main wrapper component.
 

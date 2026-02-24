@@ -22,6 +22,8 @@
     flex-direction: column;
     overflow: hidden;
     color: var(--menu-text, white);
+    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.1rem;
 }
 
 .visible {
@@ -106,7 +108,7 @@
     padding: 12px 24px;
     cursor: pointer;
     color: var(--menu-text, rgba(255, 255, 255, 0.95));
-    font-size: 0.95rem;
+    font-size: 1.06rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -163,9 +165,10 @@
 }
 
 .highlight-page-num {
-    font-size: 0.8rem;
+    font-size: 0.98rem;
     color: var(--menu-muted, rgba(255, 255, 255, 0.4));
     font-variant-numeric: tabular-nums;
+    font-family: "Courier New", monospace;
     white-space: nowrap;
 }
 

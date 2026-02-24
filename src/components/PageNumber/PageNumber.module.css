@@ -10,10 +10,11 @@
     z-index: 10;
     pointer-events: none;
     font-variant-numeric: tabular-nums;
+    font-family: "Courier New", monospace;
 
     color: color-mix(in srgb, var(--text-color) 88%, var(--bg-color) 12%);
     background: color-mix(in srgb, var(--bg-color) 93%, var(--text-color) 7%);
-    border: 1px solid color-mix(in srgb, var(--text-color) 28%, transparent);
+    border: 0.5px solid color-mix(in srgb, var(--text-color) 28%, transparent);
 
     padding: 4px 10px;
     border-radius: 12px;

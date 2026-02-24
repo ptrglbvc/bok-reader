@@ -24,6 +24,8 @@
     border-radius: 24px;
     border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
     color: var(--menu-text, #fff);
+    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.1rem;
     max-height: 80%;
     overflow-y: auto;
     box-shadow: none;
@@ -105,7 +107,7 @@
 }
 
 .option-label {
-    font-size: 0.9rem;
+    font-size: 1.04rem;
     color: var(--menu-text, rgba(255, 255, 255, 0.95));
     font-weight: 500;
     margin-right: auto;
@@ -153,7 +155,8 @@
 
 .option-value {
     font-variant-numeric: tabular-nums;
-    font-weight: 600;
+    font-family: "Courier New", monospace;
+    font-weight: 500;
     min-width: 24px;
     text-align: center;
     display: inline-block;
@@ -179,7 +182,8 @@
     height: 44px;
     margin-top: 8px;
     padding: 0 12px;
-    font-size: 14px;
+    font-size: 16px;
+    font-family: "Courier New", monospace;
     background-color: var(--bg-color);
     border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.05));
     border-radius: 10px;

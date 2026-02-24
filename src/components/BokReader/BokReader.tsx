@@ -105,6 +105,7 @@ interface BokReaderProps {
     style?: React.CSSProperties;
     supportedFonts?: { displayName: string; name: string }[];
     themes?: { [key: string]: Theme };
+    defaultFontFamily?: string;
 }
 
 const BUILTIN_THEMES: { [key: string]: Theme } = {
@@ -144,6 +145,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     style,
     supportedFonts = [],
     themes = EMPTY_THEMES,
+    defaultFontFamily = "Courier New",
 }, ref) => {
     const { title, bookId, rawContent, toc, isLoading, error, loadEpub, setIsLoading } =
         useEpub();
@@ -156,7 +158,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
 
     const [sidePadding, setSidePadding] = usePersistentState<number>("bok_global_side_padding", 20);
     const [fontSize, setFontSize] = usePersistentState<number>("bok_global_fontsize", 1.4);
-    const [fontFamily, setFontFamily] = usePersistentState<string>("bok_global_font_family", "Literata");
+    const [fontFamily, setFontFamily] = usePersistentState<string>("bok_global_font_family", defaultFontFamily);
     const [theme, setTheme] = usePersistentState<string>("bok_global_theme", "Amoled Dark");
 
     const [highlights, setHighlights] = useState<Highlight[]>([]);

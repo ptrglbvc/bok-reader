@@ -39,10 +39,9 @@ function OptionsMenu({
 
     const allFonts = [
         { displayName: "Literata", name: "Literata" },
-        { displayName: "Cormorant", name: "Cormorant Garamond" },
         { displayName: "Roboto", name: "Roboto Condensed" },
+        { displayName: "Courier New", name: "Courier New" },
         ...supportedFonts,
-        { displayName: "System Default", name: "system-ui" },
     ];
 
     const allThemesArray = Object.keys(allThemes)

@@ -27,6 +27,8 @@
     flex-direction: column;
     overflow: hidden;
     color: var(--menu-text, white);
+    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.04rem;
 }
 
 .visible {
@@ -103,7 +105,7 @@
     cursor: pointer;
     color: var(--menu-text, rgba(255, 255, 255, 0.95));
     border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.06));
-    font-size: 0.95rem;
+    font-size: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -122,9 +124,10 @@
 }
 
 .toc-page-num {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: var(--menu-muted, rgba(255, 255, 255, 0.6));
     font-variant-numeric: tabular-nums;
+    font-family: "Courier New", monospace;
     white-space: nowrap;
 }
 
@@ -135,7 +138,7 @@
 }
 .toc-sublist .toc-item {
     padding-left: 40px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 }
 
 .page-jumper {
@@ -182,8 +185,9 @@
 
 .total-pages {
     color: var(--menu-muted, rgba(255,255,255,0.5));
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-variant-numeric: tabular-nums;
+    font-family: "Courier New", monospace;
 }
 
 .go-btn {

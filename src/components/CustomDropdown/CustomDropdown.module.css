@@ -22,13 +22,14 @@
     color: var(--dropdown-text);
     padding: 0 10px 0 12px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1.02rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     transition: background-color 0.2s ease, color 350ms ease, border-color 350ms ease;
-    font-family: inherit;
+    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 300;
 }
 
 .select-trigger:hover,
@@ -77,11 +78,12 @@
     color: var(--dropdown-text);
     text-align: left;
     padding: 9px 12px;
-    font-size: 0.9rem;
+    font-size: 1.02rem;
     cursor: pointer;
     animation: dropdown-option-fade 220ms ease both;
     transition: background-color 350ms ease, color 350ms ease, border-color 350ms ease;
     font-family: inherit;
+    font-weight: 300;
 }
 
 .select-menu[aria-label="Select font family"] .select-option:nth-child(1) {
@@ -89,15 +91,11 @@
 }
 
 .select-menu[aria-label="Select font family"] .select-option:nth-child(2) {
-    font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-}
-
-.select-menu[aria-label="Select font family"] .select-option:nth-child(3) {
     font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
 }
 
-.select-menu[aria-label="Select font family"] .select-option:last-child {
-    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+.select-menu[aria-label="Select font family"] .select-option:nth-child(3) {
+    font-family: "Courier New", monospace;
 }
 
 .select-option+.select-option {

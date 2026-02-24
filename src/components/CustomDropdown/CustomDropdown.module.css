@@ -1,0 +1,142 @@
+.custom-select {
+    width: 142px;
+    min-width: 122px;
+    max-width: 52%;
+    min-inline-size: 0;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.select-trigger {
+    height: 36px;
+    width: 100%;
+    border-radius: 10px;
+    background-color: var(--bg-color);
+    border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.05));
+    color: var(--menu-text, #fff);
+    padding: 0 10px 0 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: background 0.2s ease;
+}
+
+.select-trigger:hover,
+.select-trigger:active {
+    background-color: var(--menu-bg);
+}
+
+.select-trigger-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.select-trigger-arrow {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select-trigger-arrow-open {
+    transform: rotate(180deg);
+}
+
+.select-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    background: var(--bg-color);
+    border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 5;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+    transform-origin: top center;
+    animation: dropdown-pop-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select-option {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--menu-text, #fff);
+    text-align: left;
+    padding: 9px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    animation: dropdown-option-fade 220ms ease both;
+}
+
+.select-option:nth-child(1) {
+    animation-delay: 20ms;
+}
+
+.select-option:nth-child(2) {
+    animation-delay: 35ms;
+}
+
+.select-option:nth-child(3) {
+    animation-delay: 50ms;
+}
+
+.select-option:nth-child(4) {
+    animation-delay: 65ms;
+}
+
+.select-option:nth-child(5) {
+    animation-delay: 80ms;
+}
+
+.select-option:nth-child(n+6) {
+    animation-delay: 95ms;
+}
+
+.select-option:hover {
+    background: var(--menu-bg);
+}
+
+.select-option-active {
+    background: color-mix(in srgb, var(--menu-accent) 22%, var(--bg-color) 78%);
+}
+
+@keyframes dropdown-pop-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.97);
+        filter: blur(2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes dropdown-option-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .select-trigger-arrow,
+    .select-menu,
+    .select-option {
+        transition: none;
+        animation: none;
+    }
+}

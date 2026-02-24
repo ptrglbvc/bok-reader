@@ -8,7 +8,7 @@
     overflow: hidden;
     background-color: transparent;
     opacity: 1;
-    transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    transition: opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: opacity;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
@@ -21,6 +21,8 @@
     inset: 0;
     pointer-events: none;
     opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
     background-color: rgba(0, 0, 0, 0.4);
     background-color: color-mix(in srgb, var(--bg-color) 40%, transparent 60%);
     background-image:
@@ -28,7 +30,7 @@
         radial-gradient(var(--sheet-noise-dark, rgba(0, 0, 0, 0.14)) 0.6px, transparent 0.6px);
     background-size: 2.6px 2.6px, 4px 4px;
     background-position: 0 0, 1px 1px;
-    animation: menu-noise-fade-in 220ms ease-out forwards;
+    animation: menu-overlay-in 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .overlayFadeOut {
@@ -51,30 +53,75 @@
     will-change: transform, opacity;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    -webkit-transform: var(--sheet-transform-closed, translateX(-50%) translateY(120%) translateZ(0));
-    transform: var(--sheet-transform-closed, translateX(-50%) translateY(120%) translateZ(0));
-    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-                opacity 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    -webkit-transform: var(--sheet-transform-closed, translateX(-50%) translateY(125%) scale(0.96) translateZ(0));
+    transform: var(--sheet-transform-closed, translateX(-50%) translateY(125%) scale(0.96) translateZ(0));
+    filter: blur(5px);
+    transform-origin: bottom center;
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+                filter 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .panelVisible {
     -webkit-transform: var(--sheet-transform-open, translateX(-50%) translateY(0) translateZ(0));
     transform: var(--sheet-transform-open, translateX(-50%) translateY(0) translateZ(0));
     opacity: 1;
+    filter: blur(0);
+    animation: menu-panel-settle 520ms cubic-bezier(0.2, 0.8, 0.15, 1);
 }
 
 .panelSlideDown {
-    -webkit-transform: var(--sheet-transform-closed, translateX(-50%) translateY(120%) translateZ(0));
-    transform: var(--sheet-transform-closed, translateX(-50%) translateY(120%) translateZ(0));
+    -webkit-transform: var(--sheet-transform-closed, translateX(-50%) translateY(125%) scale(0.96) translateZ(0));
+    transform: var(--sheet-transform-closed, translateX(-50%) translateY(125%) scale(0.96) translateZ(0));
     opacity: 0;
+    filter: blur(3px);
 }
 
-@keyframes menu-noise-fade-in {
+@keyframes menu-overlay-in {
     from {
         opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
     }
 
     to {
         opacity: 1;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+}
+
+@keyframes menu-panel-settle {
+    0% {
+        transform: var(--sheet-transform-closed, translateX(-50%) translateY(125%) scale(0.96) translateZ(0));
+        opacity: 0;
+        filter: blur(5px);
+    }
+
+    68% {
+        transform: var(--sheet-transform-open, translateX(-50%) translateY(-5px) scale(1.01) translateZ(0));
+        opacity: 1;
+        filter: blur(0.2px);
+    }
+
+    100% {
+        transform: var(--sheet-transform-open, translateX(-50%) translateY(0) scale(1) translateZ(0));
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .overlay,
+    .panel {
+        transition: none;
+        animation: none;
+    }
+
+    .overlay::before,
+    .panelVisible,
+    .panelSlideDown {
+        animation: none;
+        filter: none;
     }
 }

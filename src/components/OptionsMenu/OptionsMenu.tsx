@@ -3,6 +3,7 @@ import toggleFullscreen from "../../helpful_functions/toggleFullscreen";
 import useBottomMenuAnimation from "../../hooks/useBottomMenuAnimation";
 import styles from "./OptionsMenu.module.css";
 import { Theme } from "../BokReader/BokReader.tsx";
+import CustomDropdown, { DropdownOption } from "../CustomDropdown/CustomDropdown";
 
 interface OptionsMenuProps {
     onClose: () => void;
@@ -45,6 +46,8 @@ function OptionsMenu({
     ];
 
     const allThemesArray = Object.keys(allThemes)
+    const fontOptions: DropdownOption[] = allFonts.map((font) => ({ label: font.displayName, value: font.name }));
+    const themeOptions: DropdownOption[] = allThemesArray.map((themeName) => ({ label: themeName, value: themeName }));
 
     const handleOverlayClick = useCallback(() => {
         closeMenu();
@@ -127,43 +130,23 @@ function OptionsMenu({
                     {/* Font Family */}
                     <div className={styles['option-row']}>
                         <div className={styles['option-label']}>Font family</div>
-                        <select
-                            className={styles['select']}
+                        <CustomDropdown
+                            options={fontOptions}
                             value={fontFamily}
-                            onChange={(e) => {
-                                const selected = allFonts.find(
-                                    (f) => f.name === e.target.value,
-                                );
-                                if (selected) setFontFamily(selected.name);
-                            }}
-                        >
-                            {allFonts.map((font) => (
-                                <option key={font.displayName} value={font.name}>
-                                    {font.displayName}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setFontFamily}
+                            ariaLabel="Select font family"
+                        />
                     </div>
 
                     {/* Color Scheme */}
                     <div className={styles['option-row']}>
                         <div className={styles['option-label']}>Color Scheme</div>
-                        <select
-                            className={styles['select']}
+                        <CustomDropdown
+                            options={themeOptions}
                             value={theme}
-                            onChange={(e) => {
-                                const selected = allThemesArray.find(
-                                    (f) => f === e.target.value,
-                                );
-                                if (selected) setTheme(selected);
-                            }}
-                        >
-                            {allThemesArray.map((theme) => (
-                                <option key={theme} value={theme}>
-                                    {theme}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setTheme}
+                            ariaLabel="Select color scheme"
+                        />
                     </div>
 
                     {/* Side Padding */}

@@ -95,6 +95,7 @@
 
     color: var(--text-color) !important;
     background-color: var(--bg-color);
+    transition: background-color 350ms ease, color 350ms ease;
 
     overflow: hidden;
     scrollbar-width: none;
@@ -113,6 +114,7 @@
     .book-page {
         margin: 0;
         font-family: var(--font-family), "Cormorant Garamond", Geordia, Times New Roman;
+        transition: color 350ms ease;
 
         /* env keepts the main content out of trouble when the book is in fullscreen mode.*/
         padding-top: calc(var(--top-padding) + env(safe-area-inset-top));
@@ -470,6 +472,13 @@
         opacity: 0.8;
     }
 
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bok-reader-container,
+    .bok-reader-container .book-page {
+        transition: none;
+    }
 }
 
 @media (pointer: coarse) {

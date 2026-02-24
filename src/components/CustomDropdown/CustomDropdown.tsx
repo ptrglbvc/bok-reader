@@ -65,6 +65,7 @@ function CustomDropdown({ options, value, onChange, ariaLabel }: CustomDropdownP
                                 role="option"
                                 aria-selected={isSelected}
                                 className={`${styles["select-option"]} ${isSelected ? styles["select-option-active"] : ""}`}
+                                style={ariaLabel === "Select font family" ? { fontFamily: option.value } : undefined}
                                 onClick={() => {
                                     onChange(option.value);
                                     setIsOpen(false);

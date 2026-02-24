@@ -86,18 +86,6 @@
     font-weight: 300;
 }
 
-.select-menu[aria-label="Select font family"] .select-option:nth-child(1) {
-    font-family: "Literata", Georgia, "Times New Roman", serif;
-}
-
-.select-menu[aria-label="Select font family"] .select-option:nth-child(2) {
-    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
-}
-
-.select-menu[aria-label="Select font family"] .select-option:nth-child(3) {
-    font-family: "Courier New", monospace;
-}
-
 .select-option+.select-option {
     border-top: 1px solid var(--dropdown-border);
 }

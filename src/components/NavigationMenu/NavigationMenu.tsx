@@ -70,6 +70,10 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         closeMenu();
     }, [closeMenu, onChapterClick]);
 
+    const handleContextMenu = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+    }, []);
+
     const renderToc = (items: TocItem[], level = 0) => {
         return (
             <ul className={level === 0 ? styles['toc-list'] : styles['toc-sublist']}>
@@ -98,6 +102,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         <div 
             className={`${styles['nav-menu-overlay']} ${isClosing ? styles['fade-out'] : ''}`} 
             onClick={closeMenu}
+            onContextMenu={handleContextMenu}
         >
             <div 
                 className={`
@@ -106,6 +111,8 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
                     ${isClosing ? styles['slide-down'] : ''}
                 `}
                 onClick={e => e.stopPropagation()}
+                onContextMenu={handleContextMenu}
+                style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
             >
                 <div className={styles['nav-header']}>
                     <h2>Table of Contents</h2>

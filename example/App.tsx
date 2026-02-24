@@ -113,9 +113,6 @@ function App() {
         "Cyberpunk": {
             "--bg-color": "#050505",
             "--text-color": "#00ff9f",
-            "--page-num-text": "#ff003c",
-            "--page-num-bg": "rgba(0, 20, 10, 0.8)",
-            "--page-num-border": "#00ff9f",
             "--color-tint": "#00ff9f"
         }
     };

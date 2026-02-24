@@ -32,9 +32,6 @@ import "./BokReader.css";
 export interface Theme {
     "--bg-color": string,
     "--text-color": string,
-    "--page-num-text": string,
-    "--page-num-bg": string,
-    "--page-num-border": string,
     "--color-tint": string
 }
 
@@ -114,17 +111,11 @@ const BUILTIN_THEMES: { [key: string]: Theme } = {
     "Da Vinci": {
         "--bg-color": "#e2d2ad",
         "--text-color": "#463425",
-        "--page-num-text": "#2b1f15",
-        "--page-num-bg": "rgba(70, 52, 37, 0.1)",
-        "--page-num-border": "rgba(70, 52, 37, 0.2)",
         "--color-tint": "#c9f"
     },
     "Amoled Dark": {
         "--bg-color": "black",
-        "--text-color": "rgb(215, 215, 215)",
-        "--page-num-text": "rgba(255, 255, 255, 0.4)",
-        "--page-num-bg": "rgba(0, 0, 0, 0.3)",
-        "--page-num-border": "rgba(255, 255, 255, 0.2)",
+        "--text-color": "rgb(210, 210, 210)",
         "--color-tint": "#c9f"
     }
 };

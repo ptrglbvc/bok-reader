@@ -198,7 +198,7 @@
         border-radius: 999px;
         background: rgba(0, 0, 0, 0.6);
         background: color-mix(in srgb, var(--bg-color) 75%, #000 25%);
-        border: 1px solid var(--page-num-border);
+        border: 1px solid color-mix(in srgb, var(--text-color) 28%, transparent);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(8px);
         transform: translateX(-50%);
@@ -217,7 +217,7 @@
         border-radius: 14px;
         background: rgba(0, 0, 0, 0.6);
         background: color-mix(in srgb, var(--bg-color) 75%, #000 25%);
-        border: 1px solid var(--page-num-border);
+        border: 1px solid color-mix(in srgb, var(--text-color) 28%, transparent);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(8px);
         transform: translateX(-50%);
@@ -279,7 +279,7 @@
     .highlight-action-button {
         border: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
         background: transparent;
-        color: var(--page-num-text);
+        color: color-mix(in srgb, var(--text-color) 88%, var(--bg-color) 12%);
         padding: 6px 10px;
         border-radius: 10px;
         font-size: 12px;
@@ -412,30 +412,6 @@
         display: none;
     }
 
-    .page-number {
-        user-select: none;
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 12px;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        z-index: 10;
-        pointer-events: none;
-        font-variant-numeric: tabular-nums;
-
-        color: var(--page-num-text);
-        background: var(--page-num-bg);
-        border: 1px solid var(--page-num-border);
-
-        padding: 4px 10px;
-        border-radius: 12px;
-        backdrop-filter: blur(2px);
-        cursor: default;
-        transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-    }
-
     .bottom-interaction-layer {
         position: absolute;
         bottom: 0;
@@ -462,7 +438,7 @@
         z-index: 1001;
         opacity: 0.5;
         transition: opacity 0.2s ease;
-        color: var(--page-num-text);
+        color: color-mix(in srgb, var(--text-color) 72%, transparent);
 
         &:hover {
             opacity: 0.8;
@@ -478,7 +454,7 @@
         z-index: 1001;
         opacity: 0.5;
         transition: opacity 0.2s ease;
-        color: var(--page-num-text);
+        color: color-mix(in srgb, var(--text-color) 72%, transparent);
         pointer-events: none;
 
         &:hover {
@@ -494,18 +470,12 @@
         opacity: 0.8;
     }
 
-    &:has(.bottom-interaction-layer .trigger-zone:nth-child(2):hover) .page-number {
-        color: var(--color-tint);
-        border-color: color-mix(in srgb, var(--color-tint) 60%, transparent);
-        background: color-mix(in srgb, var(--color-tint) 18%, var(--page-num-bg));
-    }
 }
 
 @media (pointer: coarse) {
 
     .bok-reader-container .highlight-menu,
-    .highlight-action-menu,
-    .page-number {
+    .highlight-action-menu {
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
     }

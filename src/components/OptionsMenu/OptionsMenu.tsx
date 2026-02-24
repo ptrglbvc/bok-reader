@@ -57,6 +57,10 @@ function OptionsMenu({
         event.stopPropagation();
     }, []);
 
+    const handleContextMenu = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+    }, []);
+
     const animateValue = useCallback((ref: React.RefObject<HTMLSpanElement | null>) => {
         if (ref.current) {
             ref.current.classList.add(styles['value-changed']);
@@ -111,10 +115,13 @@ function OptionsMenu({
         <div
             className={getOverlayClassName()}
             onClick={handleOverlayClick}
+            onContextMenu={handleContextMenu}
         >
             <div
                 className={getMenuClassName()}
                 onClick={handleMenuClick}
+                onContextMenu={handleContextMenu}
+                style={{ userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
             >
                 <button
                     onClick={closeMenu}

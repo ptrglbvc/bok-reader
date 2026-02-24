@@ -1,0 +1,36 @@
+.pageNumber {
+    user-select: none;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    z-index: 10;
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+
+    color: color-mix(in srgb, var(--text-color) 88%, var(--bg-color) 12%);
+    background: color-mix(in srgb, var(--bg-color) 93%, var(--text-color) 7%);
+    border: 1px solid color-mix(in srgb, var(--text-color) 28%, transparent);
+
+    padding: 4px 10px;
+    border-radius: 12px;
+    backdrop-filter: blur(2px);
+    cursor: default;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+:global(.bok-reader-container:has(.bottom-interaction-layer .trigger-zone:nth-child(2):hover)) .pageNumber {
+    color: color-mix(in srgb, var(--color-tint) 40%, var(--text-color) 60%);
+    border-color: color-mix(in srgb, var(--color-tint) 40%, var(--text-color) 60%);
+    background: color-mix(in srgb, var(--color-tint) 30%, var(--bg-color) 70%);
+}
+
+@media (pointer: coarse) {
+    .pageNumber {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+}

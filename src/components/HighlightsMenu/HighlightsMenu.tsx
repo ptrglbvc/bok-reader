@@ -119,6 +119,10 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
         }, 1600);
     }, []);
 
+    const handleContextMenu = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+    }, []);
+
     const renderHighlights = () => {
         return (
             <ul className={styles["highlight-list"]}>
@@ -202,6 +206,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
         <div
             className={`${styles["highlights-overlay"]} ${isClosing ? styles["fade-out"] : ""}`}
             onClick={closeMenu}
+            onContextMenu={handleContextMenu}
         >
             <div
                 className={`
@@ -210,6 +215,8 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                     ${isClosing ? styles["slide-down"] : ""}
                 `}
                 onClick={(event) => event.stopPropagation()}
+                onContextMenu={handleContextMenu}
+                style={{ userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
             >
                 <div className={styles["highlights-header"]}>
                     <h2>Highlights</h2>

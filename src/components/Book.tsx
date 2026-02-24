@@ -13,7 +13,7 @@ import React, {
 import usePage from "../hooks/usePage";
 import usePercentageRead from "../hooks/usePercentageRead";
 import useNavigation from "../hooks/useNavigation";
-import PageNumber from "./PageNumber";
+import PageNumber from "./PageNumber/PageNumber";
 import { calculatePageOfElement } from "../helpful_functions/calculatePageOfElement";
 import Toast from "./Toast/Toast";
 

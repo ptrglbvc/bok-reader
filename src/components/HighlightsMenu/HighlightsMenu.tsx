@@ -142,13 +142,15 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                             >
                                 <span className={styles["highlight-label"]}>{excerpt}</span>
                                 <div className={styles["highlight-meta"]}>
-                                    <span
-                                        className={`${styles["highlight-color"]} ${styles[`highlight-color--${highlight.color}`]}`}
-                                        aria-hidden="true"
-                                    />
-                                    {pageNum !== undefined && (
-                                        <span className={styles["highlight-page-num"]}>{pageNum}</span>
-                                    )}
+                                    <div className={styles["highlight-meta-top"]}>
+                                        <span
+                                            className={`${styles["highlight-color"]} ${styles[`highlight-color--${highlight.color}`]}`}
+                                            aria-hidden="true"
+                                        />
+                                        {pageNum !== undefined && (
+                                            <span className={styles["highlight-page-num"]}>{pageNum}</span>
+                                        )}
+                                    </div>
                                     <button
                                         type="button"
                                         className={styles["actions-toggle"]}

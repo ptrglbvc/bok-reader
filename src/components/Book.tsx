@@ -398,10 +398,14 @@ const Book = forwardRef<BookHandle, PageProps>(({
             if (endCmp === 0) {
                 total += textNode.length;
             } else if (endCmp === 1) {
-                if (range.endContainer === textNode) {
-                    total += range.endOffset;
-                } else {
-                    total += Math.min(range.endOffset, textNode.length);
+                try {
+                    const partialRange = document.createRange();
+                    partialRange.setStart(textNode, 0);
+                    partialRange.setEnd(range.endContainer, range.endOffset);
+                    const partialLength = partialRange.toString().length;
+                    total += Math.max(0, Math.min(partialLength, textNode.length));
+                } catch {
+                    total += 0;
                 }
                 break;
             }

@@ -184,8 +184,7 @@
         gap: 9px;
         padding: 9px 12px;
         border-radius: 999px;
-        background: rgba(0, 0, 0, 0.6);
-        background: color-mix(in srgb, var(--bg-color) 75%, #000 25%);
+        background: var(--bg-color);
         border: 1px solid color-mix(in srgb, var(--text-color) 28%, transparent);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(8px);
@@ -204,8 +203,7 @@
         gap: 8px;
         padding: 8px 10px;
         border-radius: 14px;
-        background: rgba(0, 0, 0, 0.6);
-        background: color-mix(in srgb, var(--bg-color) 75%, #000 25%);
+        background: var(--bg-color);
         border: 1px solid color-mix(in srgb, var(--text-color) 28%, transparent);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(8px);
@@ -233,23 +231,28 @@
     }
 
     .highlight-swatch {
-        width: 18px;
-        height: 18px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
-        border: 1px solid rgba(0, 0, 0, 0.2);
+        border: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
         cursor: pointer;
         padding: 0;
         outline: none;
+        transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
     .highlight-menu .highlight-swatch {
-        width: 21px;
-        height: 21px;
+        width: 24px;
+        height: 24px;
     }
 
     .highlight-action-menu .highlight-swatch {
-        width: 21px;
-        height: 21px;
+        width: 24px;
+        height: 24px;
+    }
+
+    .highlight-swatch:hover {
+        transform: translateY(-1px) scale(1.06);
     }
 
     .highlight-swatch:focus-visible {
@@ -258,32 +261,45 @@
     }
 
     .highlight-swatch--active {
-        box-shadow: 0 0 0 2px var(--color-tint);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-tint) 80%, transparent);
+        border-color: color-mix(in srgb, var(--color-tint) 62%, transparent);
     }
 
     .highlight-action-menu .highlight-swatch--active {
-        box-shadow: none;
-        transform: scale(1.25);
+        transform: scale(1.06);
     }
 
     .highlight-action-button {
-        border: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
-        background: transparent;
-        color: color-mix(in srgb, var(--text-color) 88%, var(--bg-color) 12%);
-        padding: 6px 10px;
+        min-height: 34px;
+        border: 1px solid color-mix(in srgb, var(--text-color) 28%, transparent);
+        background: color-mix(in srgb, var(--bg-color) 92%, var(--text-color) 8%);
+        color: color-mix(in srgb, var(--text-color) 100%, #000 0%);
+        padding: 6px 12px;
         border-radius: 10px;
-        font-size: 13px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
         cursor: pointer;
-        transition: background-color 0.15s ease, opacity 0.15s ease;
+        transition: transform 0.18s ease, background-color 0.2s ease, border-color 0.2s ease;
     }
 
     .highlight-action-button:hover {
-        background-color: rgba(255, 255, 255, 0.08);
+        background: color-mix(in srgb, var(--color-tint) 22%, var(--bg-color) 78%);
+        border-color: color-mix(in srgb, var(--color-tint) 50%, transparent);
+    }
+
+    .highlight-action-button:active {
+        transform: scale(0.97);
     }
 
     .highlight-action-button--danger {
-        color: #ff8a8a;
-        border-color: rgba(255, 138, 138, 0.5);
+        color: color-mix(in srgb, #ff5a5a 72%, var(--text-color) 28%);
+        border-color: color-mix(in srgb, #ff5a5a 46%, transparent);
+    }
+
+    .highlight-action-button--danger:hover {
+        background: color-mix(in srgb, #ff5a5a 14%, var(--bg-color) 86%);
+        border-color: color-mix(in srgb, #ff5a5a 62%, transparent);
     }
 
     .highlight-swatch--yellow {

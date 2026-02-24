@@ -132,7 +132,10 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                     const excerpt = text.length > 140 ? `${text.slice(0, 140)}…` : text;
 
                     return (
-                        <li key={highlight.id} className={styles["highlight-item"]}>
+                        <li
+                            key={highlight.id}
+                            className={`${styles["highlight-item"]} ${expandedId === highlight.id ? styles["highlight-item--expanded"] : ""}`}
+                        >
                             <div
                                 className={styles["highlight-row"]}
                                 onClick={() => handleGoToHighlight(highlight)}
@@ -151,6 +154,8 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                                         className={styles["actions-toggle"]}
                                         onClick={(event) => handleToggleActions(event, highlight.id)}
                                         aria-label="Highlight actions"
+                                        aria-expanded={expandedId === highlight.id}
+                                        data-highlight-toggle={highlight.id}
                                     >
                                         ⋯
                                     </button>
@@ -160,6 +165,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                                 <div
                                     className={styles["highlight-actions"]}
                                     onClick={(event) => event.stopPropagation()}
+                                    data-highlight-actions={highlight.id}
                                 >
                                     <div className={styles["highlight-swatch-row"]}>
                                         {HIGHLIGHT_COLORS.map((color) => (
@@ -230,6 +236,14 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                 </div>
 
                 <div className={styles["highlights-container"]}>
+                    {expandedId && (
+                        <button
+                            type="button"
+                            className={styles["actions-backdrop"]}
+                            onClick={() => setExpandedId(null)}
+                            aria-label="Close highlight actions"
+                        />
+                    )}
                     {highlights.length > 0 ? renderHighlights() : (
                         <div className={styles["empty-state"]}>
                             No highlights yet

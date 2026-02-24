@@ -88,10 +88,22 @@
 
 .highlights-container {
     flex: 1;
+    position: relative;
     overflow-y: auto;
     padding: 10px 0;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+}
+
+.actions-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    cursor: default;
 }
 
 .highlight-list {
@@ -102,6 +114,11 @@
 
 .highlight-item {
     border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.06));
+    position: relative;
+}
+
+.highlight-item--expanded {
+    z-index: 4;
 }
 
 .highlight-row {
@@ -173,40 +190,132 @@
 }
 
 .actions-toggle {
-    border: none;
-    background: transparent;
-    color: var(--menu-muted, rgba(255, 255, 255, 0.6));
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.14));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-color) 92%, var(--text-color) 8%);
+    color: var(--menu-muted, rgba(255, 255, 255, 0.72));
     cursor: pointer;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     line-height: 1;
-    padding: 0 2px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.18s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .actions-toggle:hover {
     color: var(--menu-text, white);
+    border-color: color-mix(in srgb, var(--menu-accent) 52%, transparent);
+    background: color-mix(in srgb, var(--menu-accent) 24%, var(--bg-color) 76%);
+}
+
+.actions-toggle:active {
+    transform: scale(0.94);
 }
 
 .highlight-actions {
-    padding: 0 24px 12px 24px;
+    position: absolute;
+    right: 24px;
+    top: 52px;
+    width: min(240px, calc(100% - 48px));
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
+    border-radius: 14px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     background: var(--bg-color);
-    transition: background-color 0.2s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(6px);
+    animation: reveal-actions 180ms ease-out;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .highlight-item:hover .highlight-actions {
-    background-color: var(--menu-bg);
+    background-color: var(--bg-color);
 }
 
 .highlight-swatch-row {
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    justify-content: center;
 }
 
 .highlight-action-row {
     display: flex;
-    gap: 8px;
+    gap: 10px;
+}
+
+.highlight-actions :global(.highlight-swatch) {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
+    transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.highlight-actions :global(.highlight-swatch:hover) {
+    transform: translateY(-1px) scale(1.06);
+}
+
+.highlight-actions :global(.highlight-swatch--active) {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--menu-accent) 80%, transparent);
+    border-color: color-mix(in srgb, var(--menu-accent) 62%, transparent);
+}
+
+.highlight-actions :global(.highlight-action-button) {
+    flex: 1;
+    min-height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.16));
+    background: color-mix(in srgb, var(--bg-color) 92%, var(--text-color) 8%);
+    color: var(--menu-text, white);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: transform 0.18s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.highlight-actions :global(.highlight-action-button:hover) {
+    background: color-mix(in srgb, var(--menu-accent) 22%, var(--bg-color) 78%);
+    border-color: color-mix(in srgb, var(--menu-accent) 50%, transparent);
+}
+
+.highlight-actions :global(.highlight-action-button:active) {
+    transform: scale(0.97);
+}
+
+.highlight-actions :global(.highlight-action-button--danger) {
+    color: color-mix(in srgb, #ff5a5a 72%, var(--text-color) 28%);
+    border-color: color-mix(in srgb, #ff5a5a 46%, transparent);
+}
+
+.highlight-actions :global(.highlight-action-button--danger:hover) {
+    background: color-mix(in srgb, #ff5a5a 14%, var(--bg-color) 86%);
+    border-color: color-mix(in srgb, #ff5a5a 62%, transparent);
+}
+
+@keyframes reveal-actions {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 640px) {
+    .highlight-actions {
+        right: 14px;
+        width: min(240px, calc(100% - 28px));
+    }
 }
 
 .empty-state {

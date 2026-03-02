@@ -219,7 +219,8 @@
     font-size: 0.98rem;
     color: var(--menu-muted, rgba(255, 255, 255, 0.4));
     font-variant-numeric: tabular-nums;
-    font-family: "Courier New", monospace;
+    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 300;
     white-space: nowrap;
 }
 

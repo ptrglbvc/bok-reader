@@ -127,7 +127,8 @@
     font-size: 0.9rem;
     color: var(--menu-muted, rgba(255, 255, 255, 0.6));
     font-variant-numeric: tabular-nums;
-    font-family: "Courier New", monospace;
+    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 300;
     white-space: nowrap;
 }
 
@@ -187,7 +188,8 @@
     color: var(--menu-muted, rgba(255,255,255,0.5));
     font-size: 0.95rem;
     font-variant-numeric: tabular-nums;
-    font-family: "Courier New", monospace;
+    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 300;
 }
 
 .go-btn {

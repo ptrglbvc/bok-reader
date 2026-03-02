@@ -5,12 +5,12 @@
     left: 50%;
     transform: translateX(-50%);
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 300;
     letter-spacing: 0.5px;
     z-index: 10;
     pointer-events: none;
     font-variant-numeric: tabular-nums;
-    font-family: "Courier New", monospace;
+    font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
 
     color: color-mix(in srgb, var(--text-color) 88%, var(--bg-color) 12%);
     background: color-mix(in srgb, var(--bg-color) 93%, var(--text-color) 7%);

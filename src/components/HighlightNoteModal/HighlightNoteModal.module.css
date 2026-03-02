@@ -110,6 +110,17 @@
     transform: scale(0.97);
 }
 
+.highlight-note-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.highlight-note-button:disabled:hover {
+    border-color: color-mix(in srgb, var(--text-color) 28%, transparent);
+    background: color-mix(in srgb, var(--bg-color) 90%, var(--text-color) 10%);
+}
+
 .highlight-note-button--primary {
     border-color: color-mix(in srgb, var(--color-tint) 56%, transparent);
     background: color-mix(in srgb, var(--color-tint) 38%, var(--bg-color) 62%);

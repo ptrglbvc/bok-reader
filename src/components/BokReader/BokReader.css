@@ -287,6 +287,7 @@
         height: 24px;
         border-radius: 50%;
         border: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
+        font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
         cursor: pointer;
         padding: 0;
         outline: none;
@@ -330,6 +331,7 @@
         border-radius: 10px;
         font-size: 0.9rem;
         font-weight: 500;
+        font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
         letter-spacing: 0.01em;
         cursor: pointer;
         transition: transform 0.18s ease, background-color 0.2s ease, border-color 0.2s ease;

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./HighlightNoteModal.module.css";
+import Toast from "../Toast/Toast";
 
 interface HighlightNoteModalProps {
     isOpen: boolean;
@@ -17,7 +18,9 @@ const HighlightNoteModal: React.FC<HighlightNoteModalProps> = ({
     onSave
 }) => {
     const [draftNote, setDraftNote] = useState(initialNote ?? "");
+    const [isCopyToastVisible, setIsCopyToastVisible] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const copyToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -52,9 +55,61 @@ const HighlightNoteModal: React.FC<HighlightNoteModalProps> = ({
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [isOpen, onClose]);
 
+    useEffect(() => {
+        return () => {
+            if (copyToastTimerRef.current) {
+                clearTimeout(copyToastTimerRef.current);
+            }
+        };
+    }, []);
+
     const handleSave = useCallback(() => {
         onSave(draftNote);
     }, [draftNote, onSave]);
+
+    const copyTextToClipboard = useCallback(async (text: string) => {
+        if (!text) return;
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+                return;
+            }
+        } catch {
+            // fallback below
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand("copy");
+        } catch (err) {
+            console.warn("Copy failed:", err);
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }, []);
+
+    const triggerCopyToast = useCallback(() => {
+        setIsCopyToastVisible(false);
+        requestAnimationFrame(() => setIsCopyToastVisible(true));
+
+        if (copyToastTimerRef.current) {
+            clearTimeout(copyToastTimerRef.current);
+        }
+        copyToastTimerRef.current = setTimeout(() => {
+            setIsCopyToastVisible(false);
+        }, 1600);
+    }, []);
+
+    const handleCopyNote = useCallback(async () => {
+        if (!draftNote) return;
+        await copyTextToClipboard(draftNote);
+        triggerCopyToast();
+    }, [copyTextToClipboard, draftNote, triggerCopyToast]);
 
     if (!isOpen) return null;
 
@@ -101,6 +156,15 @@ const HighlightNoteModal: React.FC<HighlightNoteModalProps> = ({
                     </button>
                     <button
                         type="button"
+                        className={styles["highlight-note-button"]}
+                        onClick={handleCopyNote}
+                        disabled={!draftNote}
+                        aria-label="Copy note text"
+                    >
+                        Copy
+                    </button>
+                    <button
+                        type="button"
                         className={`${styles["highlight-note-button"]} ${styles["highlight-note-button--primary"]}`}
                         onClick={handleSave}
                     >
@@ -108,6 +172,7 @@ const HighlightNoteModal: React.FC<HighlightNoteModalProps> = ({
                     </button>
                 </div>
             </div>
+            <Toast message="Note copied to clipboard" visible={isCopyToastVisible} />
         </div>
     );
 };

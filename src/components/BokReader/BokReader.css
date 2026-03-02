@@ -170,7 +170,7 @@
         font-size: 0.42em;
         line-height: 1;
         pointer-events: none;
-        color: color-mix(in srgb, var(--text-color) 86%, #000 14%);
+        color: color-mix(in srgb, var(--text-color) 86%, var(--color-tint) 14%);
     }
 
     .bok-highlight--with-note[data-highlight-color="yellow"]::before {

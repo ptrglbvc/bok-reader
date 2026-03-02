@@ -114,7 +114,6 @@ const HighlightNoteModal: React.FC<HighlightNoteModalProps> = ({
     if (!isOpen) return null;
 
     const excerpt = highlightText?.trim() ?? "";
-    const excerptPreview = excerpt.length > 180 ? `${excerpt.slice(0, 180)}...` : excerpt;
 
     return (
         <div
@@ -135,8 +134,8 @@ const HighlightNoteModal: React.FC<HighlightNoteModalProps> = ({
                 onTouchEnd={(event) => event.stopPropagation()}
             >
                 <h2 id="highlight-note-title">{initialNote?.trim() ? "Edit note" : "Add note"}</h2>
-                {excerptPreview && (
-                    <p className={styles["highlight-note-excerpt"]}>{excerptPreview}</p>
+                {excerpt && (
+                    <p className={styles["highlight-note-excerpt"]}>{excerpt}</p>
                 )}
                 <textarea
                     ref={textareaRef}

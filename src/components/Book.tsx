@@ -33,6 +33,7 @@ export type Highlight = {
     end: number;
     color: HighlightColor;
     text?: string;
+    note?: string;
 };
 
 type VerticalPlacement = "above" | "below";
@@ -55,7 +56,7 @@ const MENU_HORIZONTAL_GAP = 12;
 const SELECTION_MENU_ESTIMATED_HEIGHT = 44;
 const ACTION_MENU_ESTIMATED_HEIGHT = 94;
 const SELECTION_MENU_ESTIMATED_WIDTH = 135;
-const ACTION_MENU_ESTIMATED_WIDTH = 180;
+const ACTION_MENU_ESTIMATED_WIDTH = 240;
 
 const getMenuTopPosition = ({
     anchorTop,
@@ -97,19 +98,29 @@ const getMenuLeftPosition = ({
 };
 
 const BookContent = memo(
-    ({ content, bookRef }: { content: string; bookRef: React.RefObject<HTMLDivElement> }) => (
+    ({
+        content,
+        contentLanguage,
+        bookRef
+    }: {
+        content: string;
+        contentLanguage: string;
+        bookRef: React.RefObject<HTMLDivElement>;
+    }) => (
         <div
             ref={bookRef}
             dangerouslySetInnerHTML={{ __html: content }}
             className="book-page"
             id="bok-main-element"
+            lang={contentLanguage || undefined}
         ></div>
     ),
-    (prev, next) => prev.content === next.content,
+    (prev, next) => prev.content === next.content && prev.contentLanguage === next.contentLanguage,
 );
 
 interface PageProps {
     content: string;
+    contentLanguage: string;
     title: string;
     bookId: string;
     setIsLoading: Dispatch<SetStateAction<boolean>>;
@@ -128,6 +139,8 @@ interface PageProps {
     onAddHighlight: (highlight: Highlight) => void;
     onRemoveHighlight: (id: string) => void;
     onUpdateHighlightColor: (id: string, color: HighlightColor) => void;
+    onRequestHighlightNote: (id: string) => void;
+    isHighlightNoteModalVisible: boolean;
 }
 
 const easeOutBack = (x: number): number => {
@@ -139,6 +152,7 @@ const easeOutBack = (x: number): number => {
 // 3. Use forwardRef
 const Book = forwardRef<BookHandle, PageProps>(({
     content,
+    contentLanguage,
     title,
     bookId,
     setIsLoading,
@@ -156,7 +170,9 @@ const Book = forwardRef<BookHandle, PageProps>(({
     highlights,
     onAddHighlight,
     onRemoveHighlight,
-    onUpdateHighlightColor
+    onUpdateHighlightColor,
+    onRequestHighlightNote,
+    isHighlightNoteModalVisible
 }, ref) => {
     const bookRef = useRef<HTMLDivElement>(null);
     const initialLoadDoneRef = useRef(false);
@@ -326,7 +342,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
     }), [goToPage, setProgress]);
 
     const isInteractionMenuVisible = Boolean(
-        isOptionMenuVisible || highlightMenuPosition || highlightActionMenu
+        isOptionMenuVisible || highlightMenuPosition || highlightActionMenu || isHighlightNoteModalVisible
     );
 
     useNavigation(
@@ -377,6 +393,86 @@ const Book = forwardRef<BookHandle, PageProps>(({
         return nodes;
     }, [createTextNodeWalker]);
 
+    const positionHighlightNoteMarkers = useCallback(() => {
+        const container = bookRef.current;
+        if (!container) return;
+
+        const allHighlightSpans = Array.from(
+            container.querySelectorAll<HTMLElement>("span[data-highlight-id]")
+        );
+        const spansById = new Map<string, HTMLElement[]>();
+
+        allHighlightSpans.forEach((span) => {
+            const highlightId = span.getAttribute("data-highlight-id");
+            if (!highlightId) return;
+            const group = spansById.get(highlightId);
+            if (group) {
+                group.push(span);
+                return;
+            }
+            spansById.set(highlightId, [span]);
+        });
+
+        spansById.forEach((spans) => {
+            const markerSpan = spans.find((span) => span.getAttribute("data-highlight-note") === "true");
+            if (!markerSpan) return;
+
+            const rects: DOMRect[] = [];
+            spans.forEach((span) => {
+                const clientRects = span.getClientRects();
+                for (let index = 0; index < clientRects.length; index += 1) {
+                    const rect = clientRects.item(index);
+                    if (!rect || rect.width <= 0 || rect.height <= 0) continue;
+                    rects.push(rect);
+                }
+            });
+
+            if (rects.length === 0) {
+                markerSpan.style.removeProperty("--note-marker-left");
+                markerSpan.style.removeProperty("--note-marker-top");
+                return;
+            }
+
+            const markerClientRects: DOMRect[] = [];
+            const markerClientRectList = markerSpan.getClientRects();
+            for (let index = 0; index < markerClientRectList.length; index += 1) {
+                const rect = markerClientRectList.item(index);
+                if (!rect || rect.width <= 0 || rect.height <= 0) continue;
+                markerClientRects.push(rect);
+            }
+
+            const markerAnchorRect = markerSpan.getBoundingClientRect();
+            const markerStartRect = markerClientRects[0] ?? markerAnchorRect;
+            const containerRect = containerElementRef.current?.getBoundingClientRect() ?? null;
+            const getPageBand = (rect: DOMRect) => {
+                if (!containerRect || pageWidth <= 0) return null;
+                const rectCenter = rect.left + rect.width / 2;
+                return Math.floor((rectCenter - containerRect.left) / pageWidth);
+            };
+
+            const markerBand = getPageBand(markerStartRect);
+            const samePageRects = markerBand === null
+                ? []
+                : rects.filter((rect) => getPageBand(rect) === markerBand);
+            const anchorRects = samePageRects.length > 0 ? samePageRects : rects;
+
+            let minLeft = anchorRects[0].left;
+            let minTop = anchorRects[0].top;
+            let maxBottom = anchorRects[0].bottom;
+            anchorRects.forEach((rect) => {
+                minLeft = Math.min(minLeft, rect.left);
+                minTop = Math.min(minTop, rect.top);
+                maxBottom = Math.max(maxBottom, rect.bottom);
+            });
+
+            markerSpan.style.setProperty("--note-marker-left", `${minLeft - markerStartRect.left}px`);
+            markerSpan.style.setProperty(
+                "--note-marker-top",
+                `${((minTop + maxBottom) / 2) - markerStartRect.top}px`
+            );
+        });
+    }, [containerElementRef, pageWidth]);
+
     const getOffsetWithinChapter = useCallback((
         chapter: Element,
         container: Node,
@@ -419,8 +515,14 @@ const Book = forwardRef<BookHandle, PageProps>(({
         return total;
     }, [createTextNodeWalker]);
 
-    const wrapTextRange = useCallback((textNode: Text, start: number, end: number, highlight: Highlight) => {
-        if (start >= end) return;
+    const wrapTextRange = useCallback((
+        textNode: Text,
+        start: number,
+        end: number,
+        highlight: Highlight,
+        withNoteMarker: boolean
+    ) => {
+        if (start >= end) return false;
         let targetNode = textNode;
         if (start > 0) {
             targetNode = textNode.splitText(start);
@@ -433,11 +535,16 @@ const Book = forwardRef<BookHandle, PageProps>(({
         span.setAttribute("data-highlight-id", highlight.id);
         span.setAttribute("data-highlight-color", highlight.color);
         span.className = `bok-highlight bok-highlight--${highlight.color}`;
+        if (withNoteMarker) {
+            span.classList.add("bok-highlight--with-note");
+            span.setAttribute("data-highlight-note", "true");
+        }
 
         const parent = targetNode.parentNode;
-        if (!parent) return;
+        if (!parent) return false;
         parent.insertBefore(span, targetNode);
         span.appendChild(targetNode);
+        return true;
     }, []);
 
     const applyHighlightToChapter = useCallback((chapter: Element, highlight: Highlight) => {
@@ -445,6 +552,8 @@ const Book = forwardRef<BookHandle, PageProps>(({
 
         const nodes = getTextNodes(chapter);
         let total = 0;
+        const hasNote = Boolean(highlight.note?.trim());
+        let hasRenderedNoteMarker = false;
 
         for (const textNode of nodes) {
             const nodeLength = textNode.length;
@@ -460,7 +569,16 @@ const Book = forwardRef<BookHandle, PageProps>(({
 
             const start = Math.max(highlight.start, nodeStart) - nodeStart;
             const end = Math.min(highlight.end, nodeEnd) - nodeStart;
-            wrapTextRange(textNode, start, end, highlight);
+            const didWrap = wrapTextRange(
+                textNode,
+                start,
+                end,
+                highlight,
+                hasNote && !hasRenderedNoteMarker
+            );
+            if (didWrap && hasNote && !hasRenderedNoteMarker) {
+                hasRenderedNoteMarker = true;
+            }
 
             total += nodeLength;
         }
@@ -491,11 +609,12 @@ const Book = forwardRef<BookHandle, PageProps>(({
             if (!chapter) continue;
             applyHighlightToChapter(chapter, highlight);
         }
-    }, [applyHighlightToChapter, escapeId, highlights]);
+        positionHighlightNoteMarkers();
+    }, [applyHighlightToChapter, escapeId, highlights, positionHighlightNoteMarkers]);
 
 
     const showHighlightMenu = useCallback(() => {
-        if (isOptionMenuVisible || showTutorial) return;
+        if (isOptionMenuVisible || showTutorial || isHighlightNoteModalVisible) return;
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
             setHighlightMenuPosition(null);
@@ -550,7 +669,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
         selectionMenuTimestampRef.current = Date.now();
         setHighlightMenuPosition({ left, anchorLeft, top, anchorTop, anchorBottom, placement });
 
-    }, [containerElementRef, getChapterElement, isOptionMenuVisible, showTutorial]);
+    }, [containerElementRef, getChapterElement, isHighlightNoteModalVisible, isOptionMenuVisible, showTutorial]);
 
     const handleHighlightColor = useCallback((color: HighlightColor) => {
         const range = selectionRangeRef.current;
@@ -744,12 +863,12 @@ const Book = forwardRef<BookHandle, PageProps>(({
     }, []);
 
     useEffect(() => {
-        if (isOptionMenuVisible || showTutorial) {
+        if (isOptionMenuVisible || showTutorial || isHighlightNoteModalVisible) {
             setHighlightMenuPosition(null);
             selectionRangeRef.current = null;
             setHighlightActionMenu(null);
         }
-    }, [isOptionMenuVisible, showTutorial]);
+    }, [isHighlightNoteModalVisible, isOptionMenuVisible, showTutorial]);
 
     useLayoutEffect(() => {
         if (!highlightMenuPosition) return;
@@ -937,6 +1056,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
                 } else {
                     setCurrentPage(1);
                 }
+                positionHighlightNoteMarkers();
                 setIsLoading(false);
                 if (!initialLoadDoneRef.current) {
                     initialLoadDoneRef.current = true;
@@ -948,7 +1068,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
             clearTimeout(timer);
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
         };
-    }, [pageWidth, pageHeight, sidePadding, topPadding, fontSize, lineHeight, fontFamily, noOfPages, content, title, setIsLoading]);
+    }, [pageWidth, pageHeight, sidePadding, topPadding, fontSize, lineHeight, fontFamily, noOfPages, content, title, setIsLoading, positionHighlightNoteMarkers]);
 
 
     useEffect(() => {
@@ -983,8 +1103,8 @@ const Book = forwardRef<BookHandle, PageProps>(({
 
     return (
         <>
-            <BookContent content={content} bookRef={bookRef} />
-            {highlightMenuPosition && !isOptionMenuVisible && !showTutorial && (
+            <BookContent content={content} contentLanguage={contentLanguage} bookRef={bookRef} />
+            {highlightMenuPosition && !isOptionMenuVisible && !showTutorial && !isHighlightNoteModalVisible && (
                 <div
                     ref={highlightMenuRef}
                     className="highlight-menu"
@@ -1022,7 +1142,7 @@ const Book = forwardRef<BookHandle, PageProps>(({
                     />
                 </div>
             )}
-            {highlightActionMenu && activeHighlight && !isOptionMenuVisible && !showTutorial && (
+            {highlightActionMenu && activeHighlight && !isOptionMenuVisible && !showTutorial && !isHighlightNoteModalVisible && (
                 <div
                     ref={highlightActionMenuRef}
                     className="highlight-action-menu"
@@ -1090,6 +1210,17 @@ const Book = forwardRef<BookHandle, PageProps>(({
                             }}
                         >
                             Copy
+                        </button>
+                        <button
+                            type="button"
+                            className={`highlight-action-button highlight-action-button--note${activeHighlight.note?.trim() ? " highlight-action-button--note-active" : ""}`}
+                            onClick={() => {
+                                onRequestHighlightNote(activeHighlight.id);
+                                setHighlightActionMenu(null);
+                            }}
+                            aria-label={activeHighlight.note?.trim() ? "Edit note" : "Add note"}
+                        >
+                            Note
                         </button>
                         <button
                             type="button"

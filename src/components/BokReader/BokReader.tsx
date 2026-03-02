@@ -15,6 +15,7 @@ import LoadingScreen from "../LoadingScreen/LoadingScreen";
 import OptionsMenu from "../OptionsMenu/OptionsMenu";
 import NavigationMenu from "../NavigationMenu/NavigationMenu";
 import HighlightsMenu from "../HighlightsMenu/HighlightsMenu";
+import HighlightNoteModal from "../HighlightNoteModal/HighlightNoteModal";
 import TutorialOverlay from "../TutorialOverlay/TutorialOverlay";
 import {
     acknowledgePendingSyncEvents,
@@ -72,6 +73,11 @@ export type BokReaderSyncEvent =
         type: "highlight.updateColor";
         highlightId: string;
         color: Highlight["color"];
+    })
+    | (BokReaderSyncEventBase & {
+        type: "highlight.updateNote";
+        highlightId: string;
+        note?: string;
     });
 
 export type BokReaderSyncConflictEntity = "progress" | "highlights";
@@ -147,7 +153,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     themes = EMPTY_THEMES,
     defaultFontFamily = "Courier New",
 }, ref) => {
-    const { title, bookId, rawContent, toc, isLoading, error, loadEpub, setIsLoading } =
+    const { title, bookId, language, rawContent, toc, isLoading, error, loadEpub, setIsLoading } =
         useEpub();
 
     const allThemes = useMemo(() => {
@@ -164,6 +170,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     const [theme, setTheme] = usePersistentState<string>("bok_global_theme", "Amoled Dark");
 
     const [highlights, setHighlights] = useState<Highlight[]>([]);
+    const [noteEditorHighlightId, setNoteEditorHighlightId] = useState<string | null>(null);
     const highlightsRef = useRef<Highlight[]>([]);
     const progressRef = useRef(0);
 
@@ -190,10 +197,21 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     const legacyHighlightsStorageKey = title && title !== "Loading..."
         ? `bok_highlights_${title}`
         : "";
+    const activeHighlightForNote = useMemo(() => {
+        if (!noteEditorHighlightId) return null;
+        return highlights.find((highlight) => highlight.id === noteEditorHighlightId) ?? null;
+    }, [highlights, noteEditorHighlightId]);
 
     useEffect(() => {
         highlightsRef.current = highlights;
     }, [highlights]);
+
+    useEffect(() => {
+        if (!noteEditorHighlightId) return;
+        if (!highlights.some((highlight) => highlight.id === noteEditorHighlightId)) {
+            setNoteEditorHighlightId(null);
+        }
+    }, [highlights, noteEditorHighlightId]);
 
     const emitSyncEvent = useCallback((event: BokReaderSyncEvent) => {
         enqueuePendingSyncEvent(pendingSyncEventsRef.current, event);
@@ -399,6 +417,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
         lastProgressSyncEventRef.current = null;
         hasObservedProgressRef.current = false;
         progressRef.current = 0;
+        setNoteEditorHighlightId(null);
     }, [bookId]);
 
     const handleAddHighlight = useCallback((highlight: Highlight) => {
@@ -466,6 +485,44 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
             color
         });
     }, [bookId, emitSyncEvent]);
+
+    const handleUpdateHighlightNote = useCallback((id: string, note: string) => {
+        const currentHighlight = highlightsRef.current.find((highlight) => highlight.id === id);
+        if (!currentHighlight) return;
+
+        const trimmed = note.trim();
+        const nextNote = trimmed.length > 0 ? trimmed : undefined;
+        if ((currentHighlight.note ?? "") === (nextNote ?? "")) return;
+
+        setHighlights((prev) => prev.map((highlight) => (
+            highlight.id === id ? { ...highlight, note: nextNote } : highlight
+        )));
+
+        if (!bookId || suppressSyncEmissionRef.current > 0) return;
+
+        emitSyncEvent({
+            type: "highlight.updateNote",
+            mutationId: createMutationId("hl_note"),
+            bookId,
+            emittedAt: Date.now(),
+            highlightId: id,
+            note: nextNote
+        });
+    }, [bookId, emitSyncEvent]);
+
+    const handleRequestHighlightNote = useCallback((id: string) => {
+        setNoteEditorHighlightId(id);
+    }, []);
+
+    const handleCloseHighlightNoteModal = useCallback(() => {
+        setNoteEditorHighlightId(null);
+    }, []);
+
+    const handleSaveHighlightNote = useCallback((note: string) => {
+        if (!noteEditorHighlightId) return;
+        handleUpdateHighlightNote(noteEditorHighlightId, note);
+        setNoteEditorHighlightId(null);
+    }, [handleUpdateHighlightNote, noteEditorHighlightId]);
 
     const handleProgressChange = useCallback((progress: number) => {
         const normalizedProgress = clampProgress(progress);
@@ -595,6 +652,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                     <Book
                         ref={bookComponentRef}
                         content={rawContent}
+                        contentLanguage={language}
                         title={title}
                         bookId={bookId}
                         setIsLoading={setIsLoading}
@@ -613,6 +671,8 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                         onAddHighlight={handleAddHighlight}
                         onRemoveHighlight={handleRemoveHighlight}
                         onUpdateHighlightColor={handleUpdateHighlightColor}
+                        onRequestHighlightNote={handleRequestHighlightNote}
+                        isHighlightNoteModalVisible={Boolean(activeHighlightForNote)}
                     />
 
                     {activeMenu === "options" && (
@@ -653,10 +713,19 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                             onGoToPage={(page) => bookComponentRef.current?.goToPage(page)}
                             onRemoveHighlight={handleRemoveHighlight}
                             onUpdateHighlightColor={handleUpdateHighlightColor}
+                            onRequestHighlightNote={handleRequestHighlightNote}
                         />
                     )}
 
-                    {activeMenu === "none" && !showTutorial && !isLoading && (
+                    <HighlightNoteModal
+                        isOpen={Boolean(activeHighlightForNote)}
+                        initialNote={activeHighlightForNote?.note}
+                        highlightText={activeHighlightForNote?.text}
+                        onClose={handleCloseHighlightNoteModal}
+                        onSave={handleSaveHighlightNote}
+                    />
+
+                    {activeMenu === "none" && !showTutorial && !isLoading && !activeHighlightForNote && (
                         <div className="bottom-interaction-layer">
                             <div
                                 className="trigger-zone"

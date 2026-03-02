@@ -44,6 +44,11 @@ describe("areHighlightsEqual", () => {
         const changed = [{ ...h1, color: "red" as const }, h2];
         expect(areHighlightsEqual([h1, h2], changed)).toBe(false);
     });
+
+    test("detects note changes", () => {
+        const withNote = [{ ...h1, note: "remember this" }];
+        expect(areHighlightsEqual([h1], withNote)).toBe(false);
+    });
 });
 
 describe("getSyncStateFingerprint", () => {
@@ -73,6 +78,21 @@ describe("getSyncStateFingerprint", () => {
         const changed = {
             ...base,
             highlights: [{ ...h1, text: "updated" }]
+        };
+
+        expect(getSyncStateFingerprint(base)).not.toBe(getSyncStateFingerprint(changed));
+    });
+
+    test("changes when note content changes", () => {
+        const base = {
+            bookId: "book-1",
+            progress: 0.42,
+            highlights: [h1]
+        };
+
+        const changed = {
+            ...base,
+            highlights: [{ ...h1, note: "need to revisit" }]
         };
 
         expect(getSyncStateFingerprint(base)).not.toBe(getSyncStateFingerprint(changed));

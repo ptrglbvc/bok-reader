@@ -107,6 +107,8 @@ const useNavigation = (
                 target.closest("[data-highlight-id]") ||
                 target.closest(".highlight-menu") ||
                 target.closest(".highlight-action-menu") ||
+                target.closest(".highlight-note-modal") ||
+                target.closest(".highlight-note-modal-overlay") ||
                 target.closest(".highlights-icon") ||
                 target.closest(".settings-icon")
             ) return;
@@ -178,6 +180,8 @@ const useNavigation = (
                 target.closest("[data-highlight-id]") ||
                 target.closest(".highlight-menu") ||
                 target.closest(".highlight-action-menu") ||
+                target.closest(".highlight-note-modal") ||
+                target.closest(".highlight-note-modal-overlay") ||
                 target.closest(".highlights-icon") ||
                 target.closest(".settings-icon")
             ) return;

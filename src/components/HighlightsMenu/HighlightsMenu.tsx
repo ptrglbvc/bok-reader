@@ -11,6 +11,7 @@ interface HighlightsMenuProps {
     onGoToPage: (page: number) => void;
     onRemoveHighlight: (id: string) => void;
     onUpdateHighlightColor: (id: string, color: HighlightColor) => void;
+    onRequestHighlightNote: (id: string) => void;
 }
 
 const HIGHLIGHT_COLORS: HighlightColor[] = ["yellow", "red", "blue", "purple"];
@@ -20,7 +21,8 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
     onClose,
     onGoToPage,
     onRemoveHighlight,
-    onUpdateHighlightColor
+    onUpdateHighlightColor,
+    onRequestHighlightNote
 }) => {
     const { isVisible, isClosing, closeMenu } = useBottomMenuAnimation(onClose);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -130,6 +132,7 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                     const pageNum = pageMap[highlight.id];
                     const text = getHighlightText(highlight);
                     const excerpt = text.length > 140 ? `${text.slice(0, 140)}…` : text;
+                    const note = highlight.note?.trim() ?? "";
 
                     return (
                         <li
@@ -140,7 +143,12 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                                 className={styles["highlight-row"]}
                                 onClick={() => handleGoToHighlight(highlight)}
                             >
-                                <span className={styles["highlight-label"]}>{excerpt}</span>
+                                <div className={styles["highlight-text"]}>
+                                    <span className={styles["highlight-label"]}>{excerpt}</span>
+                                    {note && (
+                                        <p className={styles["highlight-note-preview"]}>{note}</p>
+                                    )}
+                                </div>
                                 <div className={styles["highlight-meta"]}>
                                     <div className={styles["highlight-meta-top"]}>
                                         <span
@@ -192,6 +200,17 @@ const HighlightsMenu: React.FC<HighlightsMenuProps> = ({
                                             }}
                                         >
                                             Copy
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`highlight-action-button highlight-action-button--note${highlight.note?.trim() ? " highlight-action-button--note-active" : ""}`}
+                                            onClick={() => {
+                                                onRequestHighlightNote(highlight.id);
+                                                setExpandedId(null);
+                                            }}
+                                            aria-label={highlight.note?.trim() ? "Edit note" : "Add note"}
+                                        >
+                                            Note
                                         </button>
                                         <button
                                             type="button"

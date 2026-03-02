@@ -20,6 +20,47 @@ function getMetadataText(opf: Document, selector: string): string {
     return normalizeMetadataValue(element?.textContent);
 }
 
+function normalizeLanguageTag(value: string | null | undefined): string {
+    if (!value) return "";
+    const normalizedValue = value.trim().replace(/_/g, "-");
+    const [firstToken = ""] = normalizedValue.split(/[,\s;]+/);
+    return firstToken;
+}
+
+function getPrimaryEpubLanguage(opf: Document): string {
+    const languageElements = Array.from(
+        opf.querySelectorAll("metadata > dc\\:language, metadata > language")
+    );
+
+    for (const languageElement of languageElements) {
+        const candidate = normalizeLanguageTag(languageElement.textContent);
+        if (candidate) return candidate;
+    }
+
+    return "";
+}
+
+function getDocumentLanguage(doc: Document): string {
+    const documentElement = doc.documentElement;
+    const bodyElement = doc.querySelector("body");
+
+    return normalizeLanguageTag(
+        documentElement?.getAttribute("lang")
+        ?? documentElement?.getAttribute("xml:lang")
+        ?? bodyElement?.getAttribute("lang")
+        ?? bodyElement?.getAttribute("xml:lang")
+        ?? ""
+    );
+}
+
+function escapeHtmlAttribute(value: string): string {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
 function getCanonicalBookIdentity(opf: Document): string {
     const packageElement = opf.querySelector("package");
     const uniqueIdentifierId = packageElement?.getAttribute("unique-identifier")?.trim() ?? "";
@@ -93,6 +134,7 @@ export default function useEpub() {
     const [isLoading, setIsLoading] = useState(true);
     const [title, setTitle] = useState("");
     const [bookId, setBookId] = useState("");
+    const [language, setLanguage] = useState("");
     const [toc, setToc] = useState<TocItem[]>([]); // 2. State for TOC
     const [error, setError] = useState<string | null>(null);
 
@@ -110,6 +152,7 @@ export default function useEpub() {
             setToc([]);
             setTitle("Loading...");
             setBookId("");
+            setLanguage("");
             setError(null);
             currentObfFolder.current = "";
             currentStyle.current = "";
@@ -162,6 +205,7 @@ export default function useEpub() {
 
                     getTitle(parsedOpf);
                     setBookId(await createBookId(parsedOpf));
+                    setLanguage(getPrimaryEpubLanguage(parsedOpf));
                     await parseManifestAndSpineRef.current(parsedOpf);
                 };
 
@@ -223,7 +267,10 @@ export default function useEpub() {
                             item.href,
                             hrefToId
                         );
-                        combinedContent += `<div class="bok-chapter" id="${idref}">${processedContent}</div>`;
+                        const chapterLanguage = processedContent.language
+                            ? ` lang="${escapeHtmlAttribute(processedContent.language)}"`
+                            : "";
+                        combinedContent += `<div class="bok-chapter" id="${idref}"${chapterLanguage}>${processedContent.content}</div>`;
                     }
                 } catch (e) {
                     console.warn(`Failed to process spine item ${item.href}:`, e);
@@ -369,7 +416,7 @@ export default function useEpub() {
         currentId: string,
         currentPath: string,
         hrefToId: { [href: string]: string }
-    ): Promise<string> {
+    ): Promise<{ content: string; language: string }> {
         let allCss = [...content.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
             .map((m) => m[1])
             .join("\n");
@@ -380,9 +427,7 @@ export default function useEpub() {
         processed = processed.replace(/<link[^>]*?>/gi, "");
         processed = processed.replace(/<title[^>]*>[\s\S]*?<\/title>/gi, "");
 
-        processed = await manipulateDom(processed, type, currentId, currentPath, hrefToId);
-
-        return processed;
+        return manipulateDom(processed, type, currentId, currentPath, hrefToId);
     }
 
     async function manipulateDom(
@@ -391,14 +436,16 @@ export default function useEpub() {
         currentId: string,
         currentPath: string,
         hrefToId: { [href: string]: string }
-    ): Promise<string> {
+    ): Promise<{ content: string; language: string }> {
         const parser = new DOMParser();
         const newDocument = parser.parseFromString(documentStr, type as DOMParserSupportedType);
 
         if (newDocument.querySelector("parsererror")) {
             console.warn("Parser error in manipulateDom");
-            return documentStr;
+            return { content: documentStr, language: "" };
         }
+
+        const documentLanguage = getDocumentLanguage(newDocument);
 
         const allElementsWithId = newDocument.querySelectorAll("[id]");
         for (const el of allElementsWithId) {
@@ -436,7 +483,10 @@ export default function useEpub() {
         for (const image of xmlImages) await formatXMLImage(image);
 
         const seri = new XMLSerializer();
-        return seri.serializeToString(newDocument.documentElement || newDocument);
+        return {
+            content: seri.serializeToString(newDocument.documentElement || newDocument),
+            language: documentLanguage
+        };
     }
 
     async function formatImg(img: Element) {
@@ -505,5 +555,5 @@ export default function useEpub() {
         document.head.appendChild(styleLinkElement.current);
     }
 
-    return { title, bookId, rawContent, toc, isLoading, error, loadEpub, setIsLoading };
+    return { title, bookId, language, rawContent, toc, isLoading, error, loadEpub, setIsLoading };
 }

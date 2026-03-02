@@ -25,7 +25,7 @@ export function cloneHighlights(highlights: Highlight[]): Highlight[] {
 }
 
 function serializeHighlight(highlight: Highlight): string {
-    return `${highlight.id}:${highlight.chapterId}:${highlight.start}:${highlight.end}:${highlight.color}:${highlight.text ?? ""}`;
+    return `${highlight.id}:${highlight.chapterId}:${highlight.start}:${highlight.end}:${highlight.color}:${highlight.text ?? ""}:${highlight.note ?? ""}`;
 }
 
 function buildHighlightCountMap(highlights: Highlight[]): Map<string, number> {

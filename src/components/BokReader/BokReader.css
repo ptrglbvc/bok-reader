@@ -111,6 +111,11 @@
         height: 100%;
         font-size: var(--font-size);
         line-height: var(--line-height, 1.5);
+        hyphens: auto;
+        -webkit-hyphens: auto;
+        -ms-hyphens: auto;
+        overflow-wrap: normal;
+        word-break: normal;
 
         column-gap: calc(2 * var(--side-padding));
         column-fill: auto;
@@ -144,6 +149,48 @@
         border-radius: 0.12em;
         cursor: pointer;
         transition: background-color 0.3s ease;
+    }
+
+    .bok-highlight--with-note {
+        position: relative;
+    }
+
+    .bok-highlight--with-note::before {
+        content: "✎";
+        position: absolute;
+        left: calc(var(--note-marker-left, 0px) + 4px);
+        top: var(--note-marker-top, 50%);
+        width: 1.2em;
+        height: 1.2em;
+        transform: translate(calc(-100% - 0.22em), -50%);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.42em;
+        line-height: 1;
+        pointer-events: none;
+        color: color-mix(in srgb, var(--text-color) 86%, #000 14%);
+    }
+
+    .bok-highlight--with-note[data-highlight-color="yellow"]::before {
+        background: color-mix(in srgb, #ffeb3b 45%, var(--bg-color) 55%);
+        border: 1px solid color-mix(in srgb, #ffeb3b 40%, transparent);
+    }
+
+    .bok-highlight--with-note[data-highlight-color="red"]::before {
+        background: color-mix(in srgb, #ff6347 45%, var(--bg-color) 55%);
+        border: 1px solid color-mix(in srgb, #ff6347 40%, transparent);
+    }
+
+    .bok-highlight--with-note[data-highlight-color="blue"]::before {
+        background: color-mix(in srgb, #4fc3f7 45%, var(--bg-color) 55%);
+        border: 1px solid color-mix(in srgb, #4fc3f7 40%, transparent);
+    }
+
+    .bok-highlight--with-note[data-highlight-color="purple"]::before {
+        background: color-mix(in srgb, var(--color-tint) 45%, var(--bg-color) 55%);
+        border: 1px solid color-mix(in srgb, var(--color-tint) 40%, transparent);
     }
 
     .bok-highlight--removing {
@@ -305,6 +352,25 @@
     .highlight-action-button--danger:hover {
         background: color-mix(in srgb, #ff5a5a 14%, var(--bg-color) 86%);
         border-color: color-mix(in srgb, #ff5a5a 62%, transparent);
+    }
+
+    .highlight-action-button--note {
+        border-color: color-mix(in srgb, var(--color-tint) 42%, transparent);
+    }
+
+    .highlight-action-button--note:hover {
+        border-color: color-mix(in srgb, var(--color-tint) 62%, transparent);
+        background: color-mix(in srgb, var(--color-tint) 30%, var(--bg-color) 70%);
+    }
+
+    .highlight-action-button--note-active {
+        border-color: color-mix(in srgb, var(--color-tint) 72%, transparent);
+        background: color-mix(in srgb, var(--color-tint) 44%, var(--bg-color) 56%);
+    }
+
+    .highlight-action-button--note-active:hover {
+        border-color: color-mix(in srgb, var(--color-tint) 82%, transparent);
+        background: color-mix(in srgb, var(--color-tint) 56%, var(--bg-color) 44%);
     }
 
     .highlight-swatch--yellow {
@@ -484,6 +550,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .bok-reader-container,
     .bok-reader-container .book-page {
         transition: none;

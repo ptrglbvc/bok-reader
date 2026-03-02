@@ -164,11 +164,23 @@
         height: 1.2em;
         transform: translate(calc(-100% - 0.22em), -50%);
         border-radius: 50%;
-        display: inline-flex;
+        display: flex;
         align-items: center;
         justify-content: center;
         font-size: 0.42em;
+        font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", "Arial Unicode MS", sans-serif;
+        font-style: normal;
+        font-weight: 600;
         line-height: 1;
+        letter-spacing: 0;
+        word-spacing: 0;
+        text-indent: 0;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        unicode-bidi: isolate;
+        writing-mode: horizontal-tb;
+        overflow: hidden;
         pointer-events: none;
         color: color-mix(in srgb, var(--text-color) 86%, var(--color-tint) 14%);
     }

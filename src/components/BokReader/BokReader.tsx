@@ -139,6 +139,8 @@ function createMutationId(prefix: string): string {
     return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+const NOTE_MODAL_INTERACTION_GUARD_MS = 320;
+
 export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     epubDataSource,
     onTitleChange,
@@ -191,6 +193,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     const queuedSyncStateRef = useRef<BokReaderSyncState | null>(null);
     const processedSyncStatesRef = useRef<Set<string>>(new Set());
     const lastConflictFingerprintRef = useRef("");
+    const bottomMenuLockUntilRef = useRef(0);
 
     const effectiveTheme = (allThemes as { [key: string]: Theme })[theme] ? theme : "Amoled Dark";
     const highlightsStorageKey = bookId ? `bok_highlights_${bookId}` : "";
@@ -201,6 +204,18 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
         if (!noteEditorHighlightId) return null;
         return highlights.find((highlight) => highlight.id === noteEditorHighlightId) ?? null;
     }, [highlights, noteEditorHighlightId]);
+    const isNoteModalOpen = Boolean(activeHighlightForNote);
+
+    const lockBottomMenuInteractions = useCallback((durationMs: number = NOTE_MODAL_INTERACTION_GUARD_MS) => {
+        const lockUntil = Date.now() + durationMs;
+        bottomMenuLockUntilRef.current = Math.max(bottomMenuLockUntilRef.current, lockUntil);
+    }, []);
+
+    const openBottomMenu = useCallback((menu: "options" | "navigation" | "highlights") => {
+        if (isNoteModalOpen) return;
+        if (Date.now() < bottomMenuLockUntilRef.current) return;
+        setActiveMenu(menu);
+    }, [isNoteModalOpen]);
 
     useEffect(() => {
         highlightsRef.current = highlights;
@@ -212,6 +227,14 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
             setNoteEditorHighlightId(null);
         }
     }, [highlights, noteEditorHighlightId]);
+
+    useEffect(() => {
+        if (!isNoteModalOpen) return;
+        lockBottomMenuInteractions();
+        if (activeMenu !== "none") {
+            setActiveMenu("none");
+        }
+    }, [activeMenu, isNoteModalOpen, lockBottomMenuInteractions]);
 
     const emitSyncEvent = useCallback((event: BokReaderSyncEvent) => {
         enqueuePendingSyncEvent(pendingSyncEventsRef.current, event);
@@ -511,18 +534,23 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
     }, [bookId, emitSyncEvent]);
 
     const handleRequestHighlightNote = useCallback((id: string) => {
+        lockBottomMenuInteractions();
+        setActiveMenu("none");
         setNoteEditorHighlightId(id);
-    }, []);
+    }, [lockBottomMenuInteractions]);
 
     const handleCloseHighlightNoteModal = useCallback(() => {
+        lockBottomMenuInteractions();
         setNoteEditorHighlightId(null);
-    }, []);
+    }, [lockBottomMenuInteractions]);
 
     const handleSaveHighlightNote = useCallback((note: string) => {
         if (!noteEditorHighlightId) return;
+
+        lockBottomMenuInteractions();
         handleUpdateHighlightNote(noteEditorHighlightId, note);
         setNoteEditorHighlightId(null);
-    }, [handleUpdateHighlightNote, noteEditorHighlightId]);
+    }, [handleUpdateHighlightNote, lockBottomMenuInteractions, noteEditorHighlightId]);
 
     const handleProgressChange = useCallback((progress: number) => {
         const normalizedProgress = clampProgress(progress);
@@ -636,7 +664,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
 
     return (
         <div
-            className={`bok-reader-container ${className || ""}`}
+            className={`bok-reader-container ${isNoteModalOpen ? "bok-reader-container--note-modal-open" : ""} ${className || ""}`}
             style={{ ...style, ...dynamicCssVariables } as React.CSSProperties}
             ref={bokReaderWrapperRef}
         >
@@ -672,10 +700,10 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                         onRemoveHighlight={handleRemoveHighlight}
                         onUpdateHighlightColor={handleUpdateHighlightColor}
                         onRequestHighlightNote={handleRequestHighlightNote}
-                        isHighlightNoteModalVisible={Boolean(activeHighlightForNote)}
+                        isHighlightNoteModalVisible={isNoteModalOpen}
                     />
 
-                    {activeMenu === "options" && (
+                    {activeMenu === "options" && !isNoteModalOpen && (
                         <OptionsMenu
                             onClose={() => setActiveMenu("none")}
                             fontSize={fontSize}
@@ -695,7 +723,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                         />
                     )}
 
-                    {activeMenu === "navigation" && !isLoading && (
+                    {activeMenu === "navigation" && !isLoading && !isNoteModalOpen && (
                         <NavigationMenu
                             toc={toc}
                             currentPage={currentBookPage}
@@ -706,7 +734,7 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                         />
                     )}
 
-                    {activeMenu === "highlights" && !isLoading && (
+                    {activeMenu === "highlights" && !isLoading && !isNoteModalOpen && (
                         <HighlightsMenu
                             highlights={highlights}
                             onClose={() => setActiveMenu("none")}
@@ -718,36 +746,36 @@ export const BokReader = forwardRef<BokReaderHandle, BokReaderProps>(({
                     )}
 
                     <HighlightNoteModal
-                        isOpen={Boolean(activeHighlightForNote)}
+                        isOpen={isNoteModalOpen}
                         initialNote={activeHighlightForNote?.note}
                         highlightText={activeHighlightForNote?.text}
                         onClose={handleCloseHighlightNoteModal}
                         onSave={handleSaveHighlightNote}
                     />
 
-                    {activeMenu === "none" && !showTutorial && !isLoading && !activeHighlightForNote && (
+                    {activeMenu === "none" && !showTutorial && !isLoading && !isNoteModalOpen && (
                         <div className="bottom-interaction-layer">
                             <div
                                 className="trigger-zone"
-                                onClick={() => setActiveMenu("highlights")}
+                                onClick={() => openBottomMenu("highlights")}
                                 aria-label="Open Highlights"
                             />
 
                             <div
                                 className="trigger-zone"
-                                onClick={() => setActiveMenu("navigation")}
+                                onClick={() => openBottomMenu("navigation")}
                                 aria-label="Open Navigation"
                             />
 
                             <div
                                 className="trigger-zone"
-                                onClick={() => setActiveMenu("options")}
+                                onClick={() => openBottomMenu("options")}
                                 aria-label="Open Settings"
                             />
 
                             <div
                                 className="settings-icon"
-                                onClick={() => setActiveMenu("options")}
+                                onClick={() => openBottomMenu("options")}
                                 aria-label="Open Settings"
                             >
                                 <Settings size={16} />

@@ -42,6 +42,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    transition: margin-bottom 0.2s ease;
     opacity: 0;
     transform: translateY(20px) scale(0.985);
     animation: highlight-note-modal-in 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
@@ -106,6 +107,24 @@
     transition: transform 0.18s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
+.highlight-note-button-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.highlight-note-button-spinner {
+    width: 0.95em;
+    height: 0.95em;
+    flex: 0 0 auto;
+    display: inline-block;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    animation: highlight-note-button-spin 0.65s linear infinite;
+}
+
 .highlight-note-button:hover {
     border-color: color-mix(in srgb, var(--note-modal-tint) 50%, transparent);
     background: color-mix(in srgb, var(--note-modal-tint) 16%, var(--bg-color) 84%);
@@ -134,6 +153,13 @@
 .highlight-note-button--primary:hover {
     border-color: color-mix(in srgb, var(--note-modal-tint) 66%, transparent);
     background: color-mix(in srgb, var(--note-modal-tint) 40%, var(--bg-color) 60%);
+}
+
+.highlight-note-button--saving,
+.highlight-note-button--saving:hover {
+    opacity: 1;
+    cursor: wait;
+    pointer-events: none;
 }
 
 @media (max-width: 640px) {
@@ -194,6 +220,12 @@
     }
 }
 
+@keyframes highlight-note-button-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .highlight-note-modal-overlay,
     .highlight-note-modal,
@@ -205,5 +237,9 @@
     .highlight-note-modal {
         opacity: 1;
         transform: none;
+    }
+
+    .highlight-note-button-spinner {
+        animation: none;
     }
 }

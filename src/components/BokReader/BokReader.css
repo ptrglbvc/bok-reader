@@ -168,7 +168,7 @@
         align-items: center;
         justify-content: center;
         font-size: 0.42em;
-        font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", "Arial Unicode MS", sans-serif;
+        font-family: "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
         font-style: normal;
         font-weight: 600;
         line-height: 1;
@@ -182,7 +182,7 @@
         writing-mode: horizontal-tb;
         overflow: hidden;
         pointer-events: none;
-        color: color-mix(in srgb, var(--text-color) 86%, var(--color-tint) 14%);
+        color: color-mix(in srgb, var(--text-color) 70%, var(--color-tint) 30%);
     }
 
     .bok-highlight--with-note[data-highlight-color="yellow"]::before {
@@ -559,6 +559,15 @@
 
     .bottom-interaction-layer .trigger-zone:nth-child(3):hover~.settings-icon {
         opacity: 0.8;
+    }
+
+    &.bok-reader-container--note-modal-open {
+        .bottom-interaction-layer,
+        .bottom-interaction-layer .trigger-zone,
+        .bottom-interaction-layer .settings-icon,
+        .bottom-interaction-layer .highlights-icon {
+            pointer-events: none !important;
+        }
     }
 
 }

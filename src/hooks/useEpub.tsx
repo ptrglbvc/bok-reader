@@ -528,7 +528,24 @@ export default function useEpub() {
             "font-weight", "line-height", "text-align", "margin", "padding"
         ];
 
+        const protectedRules: string[] = [];
+        const shouldProtectRule = (selector: string): boolean => (
+            selector
+                .split(",")
+                .some((part) => /(^|[\s>+~])hr(?=[:.#\[\s>+~]|$)/i.test(part.trim()))
+        );
+
         let css = allCss.replace(/\/\*[\s\S]*?\*\//g, "");
+
+        // Keep semantic separators intact. EPUBs often style hr with margin/text-align/padding,
+        // which are normally stripped elsewhere to prevent hostile book-wide layout overrides.
+        css = css.replace(/([^{}@]+)\{[^{}]*\}/g, (rule, selector: string) => {
+            if (!shouldProtectRule(selector)) return rule;
+            const placeholder = `__BOK_PROTECTED_CSS_RULE_${protectedRules.length}__`;
+            protectedRules.push(rule);
+            return placeholder;
+        });
+
         css = css.replace(/(^|[^.#\w-])(html|body)(?![\w-])/gi, "butt-sex-masterr");
 
         for (const prop of enemiesOfTheState) {
@@ -536,6 +553,8 @@ export default function useEpub() {
             const propRegex = new RegExp(`${escaped}(?:-[\\w-]+)?\\s*:[^;{}]*;?`, 'gi');
             css = css.replace(propRegex, '');
         }
+
+        css = css.replace(/__BOK_PROTECTED_CSS_RULE_(\d+)__/g, (_, index: string) => protectedRules[Number(index)] ?? "");
 
         css = css.replace(/[^{}@]+\{\s*\}/g, '');
         css = css.replace(/@media[^{]*\{\s*\}/g, '');

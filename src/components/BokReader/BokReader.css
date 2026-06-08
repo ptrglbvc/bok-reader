@@ -562,6 +562,7 @@
     }
 
     &.bok-reader-container--note-modal-open {
+
         .bottom-interaction-layer,
         .bottom-interaction-layer .trigger-zone,
         .bottom-interaction-layer .settings-icon,

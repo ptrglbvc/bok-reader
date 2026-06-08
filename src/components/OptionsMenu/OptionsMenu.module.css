@@ -11,13 +11,15 @@
 .options-menu {
     composes: panel from "../BottomSheetMenu/BottomSheetMenu.module.css";
     --sheet-max-width: 400px;
+    --theme-transition-duration: 350ms;
+    --theme-transition-easing: ease;
 
     --menu-bg: color-mix(in srgb, var(--bg-color) 85%, var(--text-color) 15%);
     --menu-text: color-mix(in srgb, var(--text-color) 85%, var(--bg-color) 15%);
     --menu-border: color-mix(in srgb, var(--text-color) 28%, transparent);
     --menu-accent: color-mix(in srgb, var(--color-tint) 55%, transparent);
 
-    background: var(--bg-color);
+    background-color: var(--bg-color);
     box-sizing: border-box;
     border-radius: 24px;
     border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.1));
@@ -29,7 +31,10 @@
     max-height: 80%;
     overflow: hidden;
     box-shadow: none;
-    transition: background-color 350ms ease, border-color 350ms ease, color 350ms ease;
+    transition:
+        background-color var(--theme-transition-duration) var(--theme-transition-easing),
+        border-color var(--theme-transition-duration) var(--theme-transition-easing),
+        color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .options-header {
@@ -39,6 +44,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    transition:
+        border-color var(--theme-transition-duration) var(--theme-transition-easing),
+        background-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .options-scroll-area {
@@ -50,6 +58,7 @@
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--color-tint) 42%, var(--bg-color) 58%)
         color-mix(in srgb, var(--bg-color) 86%, var(--text-color) 14%);
+    transition: scrollbar-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .visible {
@@ -76,6 +85,7 @@
     text-align: center;
     color: var(--menu-text, rgba(255, 255, 255, 0.95));
     letter-spacing: -0.02em;
+    transition: color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .close-button {
@@ -85,7 +95,7 @@
     transform: translateY(-50%);
     width: 32px;
     height: 32px;
-    background: var(--bg-color);
+    background-color: var(--bg-color);
     border: solid 1px var(--menu-border);
     border-radius: 50%;
     font-size: 16px;
@@ -99,11 +109,15 @@
     will-change: transform;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    transition: transform 0.2s ease, background-color 0.2s ease, color 350ms ease, border-color 350ms ease;
+    transition:
+        transform 0.2s ease,
+        background-color var(--theme-transition-duration) var(--theme-transition-easing),
+        color var(--theme-transition-duration) var(--theme-transition-easing),
+        border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .close-button:hover {
-    background: var(--menu-bg);
+    background-color: var(--menu-bg);
     color: var(--menu-text, #fff);
     transform: translateY(-50%) rotate(90deg) translateZ(0);
 }
@@ -119,12 +133,14 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    background: var(--bg-color);
+    background-color: var(--bg-color);
     padding: 8px 12px;
     border-radius: 16px;
     gap: 12px;
     border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.05));
-    transition: background-color 350ms ease, border-color 350ms ease;
+    transition:
+        background-color var(--theme-transition-duration) var(--theme-transition-easing),
+        border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .option-label {
@@ -133,7 +149,7 @@
     font-weight: 500;
     margin-right: auto;
     padding-left: 4px;
-    transition: color 350ms ease;
+    transition: color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .option-controls {
@@ -162,7 +178,11 @@
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     transform: translateZ(0);
-    transition: transform 0.2s ease, background-color 0.2s ease, color 350ms ease, border-color 350ms ease;
+    transition:
+        transform 0.2s ease,
+        background-color var(--theme-transition-duration) var(--theme-transition-easing),
+        color var(--theme-transition-duration) var(--theme-transition-easing),
+        border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .stepper-button:active {
@@ -189,7 +209,7 @@
     backface-visibility: hidden;
     transform: translateZ(0);
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-        color 0.2s ease;
+        color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .option-value.value-changed {
@@ -220,7 +240,11 @@
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     transform: translateZ(0);
-    transition: transform 0.2s ease, background-color 0.2s ease, color 350ms ease, border-color 350ms ease;
+    transition:
+        transform 0.2s ease,
+        background-color var(--theme-transition-duration) var(--theme-transition-easing),
+        color var(--theme-transition-duration) var(--theme-transition-easing),
+        border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .fullscreen-button:active {
@@ -241,6 +265,7 @@
     background: color-mix(in srgb, var(--bg-color) 86%, var(--text-color) 14%);
     border-radius: 999px;
     margin: 6px 0;
+    transition: background-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .options-scroll-area::-webkit-scrollbar-thumb {
@@ -252,6 +277,9 @@
     border-radius: 999px;
     border: 2px solid color-mix(in srgb, var(--bg-color) 88%, transparent);
     min-height: 36px;
+    transition:
+        background-color var(--theme-transition-duration) var(--theme-transition-easing),
+        border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .options-scroll-area::-webkit-scrollbar-thumb:hover {
@@ -268,7 +296,12 @@
     .option-row,
     .option-label,
     .stepper-button,
-    .fullscreen-button {
+    .fullscreen-button,
+    .options-header,
+    .title,
+    .options-scroll-area,
+    .options-scroll-area::-webkit-scrollbar-track,
+    .options-scroll-area::-webkit-scrollbar-thumb {
         transition: none;
     }
 }

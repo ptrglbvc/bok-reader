@@ -28,6 +28,7 @@
         radial-gradient(var(--sheet-noise-dark, rgba(0, 0, 0, 0.14)) 0.6px, transparent 0.6px);
     background-size: 2.6px 2.6px, 4px 4px;
     background-position: 0 0, 1px 1px;
+    transition: background-color 350ms ease, opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
     animation: menu-noise-fade-in 220ms ease-out forwards;
 }
 

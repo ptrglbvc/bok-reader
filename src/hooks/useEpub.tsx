@@ -525,7 +525,7 @@ export default function useEpub() {
     function stripUnneededRules(allCss: string): string {
         const enemiesOfTheState = [
             "background-color", "color", "font-size", "font-family",
-            "font-weight", "line-height", "text-align", "margin", "padding"
+            "font-weight", "line-height", "text-align", "padding"
         ];
 
         const protectedRules: string[] = [];

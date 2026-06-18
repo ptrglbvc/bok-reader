@@ -79,10 +79,15 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
             <ul className={level === 0 ? styles['toc-list'] : styles['toc-sublist']}>
                 {items.map((item, idx) => {
                     const pageNum = pageMap[item.href];
+                    const tocItemStyle = level > 0
+                        ? { paddingLeft: `${24 + level * 40}px` }
+                        : undefined;
                     return (
                         <li key={idx}>
                             <div 
-                                className={styles['toc-item']} 
+                                className={styles['toc-item']}
+                                style={tocItemStyle}
+                                data-toc-level={level}
                                 onClick={() => handleChapterClick(item.href)}
                             >
                                 <span className={styles['toc-label']}>{item.label}</span>

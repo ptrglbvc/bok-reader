@@ -532,7 +532,12 @@ export default function useEpub() {
         const shouldProtectRule = (selector: string): boolean => (
             selector
                 .split(",")
-                .some((part) => /(^|[\s>+~])hr(?=[:.#\[\s>+~]|$)/i.test(part.trim()))
+                .some((part) => {
+                    const trimmedSelector = part.trim();
+                    return /(^|[\s>+~])hr(?=[:.#[\s>+~]|$)/i.test(trimmedSelector)
+                        || /(^|[\s>+~])nav#toc(?=[:.#[\s>+~]|$)/i.test(trimmedSelector)
+                        || /(^|[\s>+~])ol\.toc(?=[:.#[\s>+~]|$)/i.test(trimmedSelector);
+                })
         );
 
         let css = allCss.replace(/\/\*[\s\S]*?\*\//g, "");

@@ -138,7 +138,7 @@
     background: var(--bg-color);
 }
 .toc-sublist .toc-item {
-    padding-left: 40px;
+    padding-left: 64px;
     font-size: 0.95rem;
 }
 
